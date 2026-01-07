@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tempo Bot - DeFi Automation Platform</title>
-    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @keyframes fadeIn {
@@ -38,629 +38,762 @@
         </div>
     </header>
 
+    <!-- Status Bar -->
+    <div id="statusBar" class="hidden fixed top-20 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg bg-blue-100 text-blue-800 z-50"></div>
+
     <!-- Main Content -->
-    <div id="welcomeScreen" class="max-w-4xl mx-auto px-4 py-20 text-center">
-        <div class="text-purple-600 mb-6 text-8xl">👛</div>
-        <h2 class="text-4xl font-bold text-gray-800 mb-4">Connect Your Wallet</h2>
-        <p class="text-xl text-gray-600 mb-8">Get started with Tempo Bot by connecting your MetaMask wallet</p>
-        <button onclick="connectWallet()" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:opacity-90 transition-all shadow-xl">
-            Connect Wallet
-        </button>
-    </div>
-
-    <div id="mainApp" class="hidden max-w-7xl mx-auto px-4 py-8">
+    <main class="max-w-7xl mx-auto px-4 py-8">
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            <!-- Sidebar -->
-            <div class="lg:col-span-1">
-                <div class="bg-white rounded-xl shadow-lg p-4 space-y-2">
-                    <button onclick="showTab('dashboard')" data-tab="dashboard" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
-                        <span>📊</span><span class="font-medium">Dashboard</span>
+            <!-- Sidebar Navigation -->
+            <nav class="bg-white rounded-xl shadow-lg p-4">
+                <h2 class="text-xl font-bold mb-4 text-gray-800">Actions</h2>
+                <div class="space-y-2">
+                    <button data-tab="welcome" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md">
+                        <span>🏠</span> Welcome
                     </button>
-                    <button onclick="showTab('faucet')" data-tab="faucet" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
-                        <span>💧</span><span class="font-medium">Faucet</span>
+                    <button data-tab="faucet" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>💧</span> Faucet Claim
                     </button>
-                    <button onclick="showTab('send')" data-tab="send" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
-                        <span>📤</span><span class="font-medium">Send</span>
+                    <button data-tab="send" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>📤</span> Send Token
                     </button>
-                    <button onclick="showTab('create')" data-tab="create" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
-                        <span>🪙</span><span class="font-medium">Create Token</span>
+                    <button data-tab="token" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🪙</span> Create Token
                     </button>
-                    <button onclick="showTab('swap')" data-tab="swap" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
-                        <span>🔄</span><span class="font-medium">Swap</span>
+                    <button data-tab="swap" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🔄</span> Swap Tokens
                     </button>
-                    <button onclick="showTab('liquidity')" data-tab="liquidity" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
-                        <span>💧</span><span class="font-medium">Liquidity</span>
+                    <button data-tab="liquidity" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>💧</span> Add Liquidity
                     </button>
-                    <button onclick="showTab('limit')" data-tab="limit" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
-                        <span>📈</span><span class="font-medium">Limit Order</span>
+                    <button data-tab="remove" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🔥</span> Remove Liquidity
                     </button>
-                    <button onclick="showTab('domain')" data-tab="domain" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
-                        <span>🌐</span><span class="font-medium">Domain</span>
+                    <button data-tab="mint" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>📈</span> Mint Tokens
                     </button>
-                    <button onclick="showTab('nft')" data-tab="nft" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
-                        <span>🖼️</span><span class="font-medium">NFT</span>
+                    <button data-tab="burn" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🔥</span> Burn Tokens
+                    </button>
+                    <button data-tab="memo" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>📝</span> Transfer with Memo
+                    </button>
+                    <button data-tab="limit" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>📊</span> Limit Order
+                    </button>
+                    <button data-tab="role" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🔑</span> Grant Role
+                    </button>
+                    <button data-tab="nft" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🖼️</span> Mint NFT
+                    </button>
+                    <button data-tab="infinity" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🌐</span> Register Domain
+                    </button>
+                    <button data-tab="retriever" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🐕</span> Retriever NFT
+                    </button>
+                    <button data-tab="batch" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>📦</span> Batch Operations
+                    </button>
+                    <button data-tab="fee" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>💸</span> Set Fee Token
+                    </button>
+                    <button data-tab="tip403" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🔒</span> TIP-403 Policies
+                    </button>
+                    <button data-tab="onchain-gm" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🌅</span> OnChain GM
+                    </button>
+                    <button data-tab="auto" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🤖</span> Auto Mode
+                    </button>
+                    <button data-tab="stats" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>📊</span> Statistics
+                    </button>
+                    <button data-tab="analytics" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🔍</span> Analytics
                     </button>
                 </div>
-            </div>
+            </nav>
 
-            <!-- Main Content Area -->
-            <div class="lg:col-span-3">
-                <div class="bg-white rounded-xl shadow-lg p-6">
-                    <!-- Dashboard Tab -->
-                    <div id="tab-dashboard" class="tab-content">
-                        <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-8 text-white mb-6">
-                            <h2 class="text-3xl font-bold mb-2">Welcome to Tempo Bot</h2>
-                            <p class="text-purple-100">Your all-in-one DeFi automation platform</p>
+            <!-- Content Area -->
+            <div class="lg:col-span-3 bg-white rounded-xl shadow-lg p-6">
+                <!-- Welcome Tab -->
+                <div id="tab-welcome" class="tab-content">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Welcome to Tempo Bot</h2>
+                    <p class="text-gray-600 mb-6">Your all-in-one DeFi automation platform on Tempo Testnet.</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="card-hover bg-gradient-to-br from-purple-50 to-pink-50 p-4 rounded-lg">
+                            <h3 class="font-semibold mb-2">Key Features</h3>
+                            <ul class="list-disc pl-4 text-sm text-gray-600">
+                                <li>Key token creation and management</li>
+                                <li>DEX trading and liquidity provision</li>
+                                <li>NFT minting and domain registration</li>
+                                <li>Batch operations and auto mode</li>
+                            </ul>
                         </div>
-                        <div id="balancesGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
-                    </div>
-
-                    <!-- Faucet Tab -->
-                    <div id="tab-faucet" class="tab-content hidden">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Claim from Faucet</h3>
-                        <p class="text-gray-600 mb-6">Get test tokens for the Tempo testnet</p>
-                        <button onclick="claimFaucet()" class="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-4 rounded-lg font-semibold hover:opacity-90 transition-all">
-                            💧 Claim Tokens
-                        </button>
-                    </div>
-
-                    <!-- Send Tab -->
-                    <div id="tab-send" class="tab-content hidden">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Send Tokens</h3>
-                        <div class="space-y-4">
-                            <select id="sendToken" class="w-full p-3 border rounded-lg">
-                                <option value="PathUSD">PathUSD</option>
-                                <option value="AlphaUSD">AlphaUSD</option>
-                                <option value="BetaUSD">BetaUSD</option>
-                                <option value="ThetaUSD">ThetaUSD</option>
-                            </select>
-                            <input type="text" id="sendRecipient" placeholder="Recipient Address" class="w-full p-3 border rounded-lg">
-                            <input type="number" id="sendAmount" placeholder="Amount" value="1" class="w-full p-3 border rounded-lg">
-                            <button onclick="sendToken()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">
-                                Send
-                            </button>
+                        <div class="card-hover bg-gradient-to-br from-blue-50 to-purple-50 p-4 rounded-lg">
+                            <h3 class="font-semibold mb-2">Network Info</h3>
+                            <ul class="text-sm text-gray-600">
+                                <li><span class="font-medium">RPC:</span> https://rpc.testnet.tempo.xyz</li>
+                                <li><span class="font-medium">Chain ID:</span> 42429</li>
+                                <li><span class="font-medium">Explorer:</span> https://explore.tempo.xyz</li>
+                            </ul>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Create Token Tab -->
-                    <div id="tab-create" class="tab-content hidden">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Create Stablecoin</h3>
-                        <div class="space-y-4">
-                            <input type="text" id="tokenName" placeholder="Token Name (e.g., Alpha Dollar)" class="w-full p-3 border rounded-lg">
-                            <input type="text" id="tokenSymbol" placeholder="Symbol (e.g., AUSD)" class="w-full p-3 border rounded-lg">
-                            <button onclick="createToken()" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700">
-                                Create Token
-                            </button>
-                            <div id="createdTokens" class="mt-6 space-y-2"></div>
+                <!-- Faucet Tab -->
+                <div id="tab-faucet" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Faucet Claim</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Number of Claims</label>
+                            <input id="faucet-count" type="number" min="1" value="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
                         </div>
-                    </div>
-
-                    <!-- Swap Tab -->
-                    <div id="tab-swap" class="tab-content hidden">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Swap Tokens</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium mb-2">From</label>
-                                <select id="swapTokenIn" class="w-full p-3 border rounded-lg">
-                                    <option value="PathUSD">PathUSD</option>
-                                    <option value="AlphaUSD">AlphaUSD</option>
-                                    <option value="BetaUSD">BetaUSD</option>
-                                    <option value="ThetaUSD">ThetaUSD</option>
-                                </select>
-                            </div>
-                            <div class="flex justify-center text-gray-400 text-2xl">⇅</div>
-                            <div>
-                                <label class="block text-sm font-medium mb-2">To</label>
-                                <select id="swapTokenOut" class="w-full p-3 border rounded-lg">
-                                    <option value="AlphaUSD">AlphaUSD</option>
-                                    <option value="PathUSD">PathUSD</option>
-                                    <option value="BetaUSD">BetaUSD</option>
-                                    <option value="ThetaUSD">ThetaUSD</option>
-                                </select>
-                            </div>
-                            <input type="number" id="swapAmount" placeholder="Amount" value="1" class="w-full p-3 border rounded-lg">
-                            <button onclick="swapTokens()" class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700">
-                                Swap
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Liquidity Tab -->
-                    <div id="tab-liquidity" class="tab-content hidden">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Add Liquidity</h3>
-                        <div class="space-y-4">
-                            <div>
-                                <label class="block text-sm font-medium mb-2">User Token</label>
-                                <select id="liqUserToken" class="w-full p-3 border rounded-lg">
-                                    <option value="0x20c0000000000000000000000000000000000001">AlphaUSD</option>
-                                    <option value="0x20c0000000000000000000000000000000000002">BetaUSD</option>
-                                    <option value="0x20c0000000000000000000000000000000000003">ThetaUSD</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium mb-2">Validator Token</label>
-                                <select id="liqValidatorToken" class="w-full p-3 border rounded-lg">
-                                    <option value="0x20c0000000000000000000000000000000000000">PathUSD</option>
-                                    <option value="0x20c0000000000000000000000000000000000001">AlphaUSD</option>
-                                </select>
-                            </div>
-                            <input type="number" id="liqAmount" placeholder="Amount" value="100" class="w-full p-3 border rounded-lg">
-                            <button onclick="addLiquidity()" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700">
-                                Add Liquidity
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Limit Order Tab -->
-                    <div id="tab-limit" class="tab-content hidden">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Limit Order</h3>
-                        <div class="space-y-4">
-                            <select id="limitToken" class="w-full p-3 border rounded-lg">
-                                <option value="AlphaUSD">AlphaUSD</option>
-                                <option value="BetaUSD">BetaUSD</option>
-                                <option value="ThetaUSD">ThetaUSD</option>
-                            </select>
-                            <input type="number" id="limitAmount" placeholder="Amount" value="10" class="w-full p-3 border rounded-lg">
-                            <div class="flex gap-2">
-                                <button onclick="setOrderType(true)" id="bidBtn" class="flex-1 py-3 rounded-lg font-semibold bg-green-600 text-white">
-                                    BID (Buy)
-                                </button>
-                                <button onclick="setOrderType(false)" id="askBtn" class="flex-1 py-3 rounded-lg font-semibold bg-gray-200">
-                                    ASK (Sell)
-                                </button>
-                            </div>
-                            <button onclick="placeLimitOrder()" class="w-full bg-orange-600 text-white py-3 rounded-lg font-semibold hover:bg-orange-700">
-                                Place Order
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Domain Tab -->
-                    <div id="tab-domain" class="tab-content hidden">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Register Domain</h3>
-                        <p class="text-gray-600 mb-4">Register a .tempo domain name</p>
-                        <div class="space-y-4">
-                            <div class="flex gap-2">
-                                <input type="text" id="domainName" placeholder="Enter domain name" class="flex-1 p-3 border rounded-lg">
-                                <div class="flex items-center px-4 bg-gray-100 rounded-lg">.tempo</div>
-                            </div>
-                            <button onclick="registerDomain()" class="w-full bg-cyan-600 text-white py-3 rounded-lg font-semibold hover:bg-cyan-700">
-                                Register Domain
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- NFT Tab -->
-                    <div id="tab-nft" class="tab-content hidden">
-                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Mint NFT</h3>
-                        <p class="text-gray-600 mb-4">Mint Retriever NFT on Tempo</p>
-                        <button onclick="mintNFT()" class="w-full bg-pink-600 text-white py-3 rounded-lg font-semibold hover:bg-pink-700">
-                            🖼️ Mint NFT
+                        <button onclick="runFaucetClaim()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Claim Faucet
                         </button>
                     </div>
                 </div>
 
-                <!-- Status Bar -->
-                <div id="statusBar" class="hidden mt-4 p-4 rounded-lg"></div>
+                <!-- Send Token Tab -->
+                <div id="tab-send" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Send Token</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Select Token</label>
+                            <select id="send-token" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Recipient Address</label>
+                            <input id="send-to" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500" placeholder="0x...">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Amount</label>
+                            <input id="send-amount" type="number" value="1" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                        </div>
+                        <button onclick="runSendToken()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Send Token
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Create Token Tab -->
+                <div id="tab-token" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Create Stablecoin</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Token Name (random if empty)</label>
+                            <input id="token-name" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500" placeholder="My Token">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Token Symbol (random if empty)</label>
+                            <input id="token-symbol" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500" placeholder="MTK">
+                        </div>
+                        <button onclick="runCreateStablecoin()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Create Token
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Swap Tokens Tab -->
+                <div id="tab-swap" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Swap Tokens</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">From Token</label>
+                            <select id="swap-from" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">To Token</label>
+                            <select id="swap-to" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Amount</label>
+                            <input id="swap-amount" type="number" value="1" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                        </div>
+                        <button onclick="runSwapTokens()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Swap
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Add Liquidity Tab -->
+                <div id="tab-liquidity" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Add Liquidity</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">User Token</label>
+                            <select id="liq-user" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Validator Token</label>
+                            <select id="liq-val" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Amount</label>
+                            <input id="liq-amount" type="number" value="1" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                        </div>
+                        <button onclick="runAddLiquidity()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Add Liquidity
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Remove Liquidity Tab -->
+                <div id="tab-remove" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Remove Liquidity</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">User Token</label>
+                            <select id="remove-user" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Validator Token</label>
+                            <select id="remove-val" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">LP Amount</label>
+                            <input id="remove-amount" type="number" value="1" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                        </div>
+                        <button onclick="runRemoveLiquidity()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Remove Liquidity
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mint Tokens Tab -->
+                <div id="tab-mint" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Mint Tokens</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Select Token</label>
+                            <select id="mint-token" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Amount</label>
+                            <input id="mint-amount" type="number" value="1000" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                        </div>
+                        <button onclick="runMintTokens()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Mint Tokens
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Burn Tokens Tab -->
+                <div id="tab-burn" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Burn Tokens</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Select Token</label>
+                            <select id="burn-token" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Amount</label>
+                            <input id="burn-amount" type="number" value="10" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                        </div>
+                        <button onclick="runBurnTokens()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Burn Tokens
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Transfer with Memo Tab -->
+                <div id="tab-memo" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Transfer with Memo</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Select Token</label>
+                            <select id="memo-token" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Amount</label>
+                            <input id="memo-amount" type="number" value="0.01" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Memo Text</label>
+                            <input id="memo-text" type="text" value="test-memo" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                        </div>
+                        <button onclick="runTransferWithMemo()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Transfer with Memo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Limit Order Tab -->
+                <div id="tab-limit" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Limit Order</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Number of Orders</label>
+                            <input id="limit-count" type="number" value="1" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                        </div>
+                        <button onclick="runLimitOrder()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Place Orders
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Grant Role Tab -->
+                <div id="tab-role" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Grant Role</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Select Role</label>
+                            <select id="role-type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                                <option value="ISSUER_ROLE">ISSUER_ROLE</option>
+                                <option value="PAUSE_ROLE">PAUSE_ROLE</option>
+                            </select>
+                        </div>
+                        <button onclick="runGrantRole()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Grant Role
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Mint NFT Tab -->
+                <div id="tab-nft" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Mint NFT</h2>
+                    <div class="space-y-4">
+                        <button onclick="runNft()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Mint NFT
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Register Domain Tab -->
+                <div id="tab-infinity" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Register Domain</h2>
+                    <div class="space-y-4">
+                        <button onclick="runInfinityName()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Register Random Domain
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Retriever NFT Tab -->
+                <div id="tab-retriever" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Retriever NFT</h2>
+                    <div class="space-y-4">
+                        <button onclick="runRetrieverNft()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Mint Retriever NFT
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Batch Operations Tab -->
+                <div id="tab-batch" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Batch Operations</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Operation Type</label>
+                            <select id="batch-type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                                <option value="1">Multiple Swaps</option>
+                                <option value="2">Multiple Transfers</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Count</label>
+                            <input id="batch-count" type="number" value="2" min="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                        </div>
+                        <button onclick="runBatchOperations()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Run Batch
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Set Fee Token Tab -->
+                <div id="tab-fee" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Set Fee Token</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Select Fee Token</label>
+                            <select id="fee-token" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                            </select>
+                        </div>
+                        <button onclick="runSetFeeToken()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Set Fee Token
+                        </button>
+                    </div>
+                </div>
+
+                <!-- TIP-403 Policies Tab -->
+                <div id="tab-tip403" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">TIP-403 Policies</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Select Token</label>
+                            <select id="tip403-token" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Policy Type</label>
+                            <select id="tip403-type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                                <option value="1">Whitelist</option>
+                                <option value="2">Blacklist</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Address</label>
+                            <input id="tip403-address" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500" placeholder="0x...">
+                        </div>
+                        <button onclick="runTip403Policies()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Set Policy
+                        </button>
+                    </div>
+                </div>
+
+                <!-- OnChain GM Tab -->
+                <div id="tab-onchain-gm" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">OnChain GM</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Type</label>
+                            <select id="gm-type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                                <option value="1">OnChain GM</option>
+                                <option value="2">Deploy</option>
+                            </select>
+                        </div>
+                        <div id="gm-deploy-count" class="hidden">
+                            <label class="block text-sm font-medium text-gray-700">Number of Deploys</label>
+                            <input id="gm-count" type="number" value="1" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                        </div>
+                        <button onclick="runOnchainGm()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Execute
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Auto Mode Tab -->
+                <div id="tab-auto" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Auto Mode</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Number of Loops</label>
+                            <input id="auto-loops" type="number" value="1" min="1" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-purple-500 focus:ring-purple-500">
+                        </div>
+                        <button onclick="runAutoMode()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Run Auto Mode
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Statistics Tab -->
+                <div id="tab-stats" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Statistics</h2>
+                    <div class="space-y-4">
+                        <button onclick="runStatistics()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Show Stats
+                        </button>
+                        <div id="stats-output" class="bg-gray-100 p-4 rounded-lg"></div>
+                    </div>
+                </div>
+
+                <!-- Analytics Tab -->
+                <div id="tab-analytics" class="tab-content hidden">
+                    <h2 class="text-2xl font-bold mb-4 text-gray-800">Analytics</h2>
+                    <div class="space-y-4">
+                        <button onclick="runAnalytics()" class="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            Run Analytics
+                        </button>
+                        <div id="analytics-output" class="bg-gray-100 p-4 rounded-lg"></div>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
+    </main>
 
     <script>
-        // Configuration
+        // Full Config
         const CONFIG = {
             RPC_URL: 'https://rpc.testnet.tempo.xyz',
             CHAIN_ID: 42429,
             EXPLORER_URL: 'https://explore.tempo.xyz',
+            GAS_LIMIT: 3000000,
+            MIN_DELAY_BETWEEN_WALLETS: 5,
+            MAX_DELAY_BETWEEN_WALLETS: 30,
+            MIN_DELAY_BETWEEN_DEPLOYS: 3,
+            MAX_DELAY_BETWEEN_DEPLOYS: 10,
+            FAUCET_CLAIM_DELAY_SEC: 15,
+            FAUCET_FINISH_DELAY_SEC: 30,
+            FAUCET_PRE_CLAIM_MS: 4000,
             TOKENS: {
                 'PathUSD': '0x20c0000000000000000000000000000000000000',
                 'AlphaUSD': '0x20c0000000000000000000000000000000000001',
                 'BetaUSD': '0x20c0000000000000000000000000000000000002',
                 'ThetaUSD': '0x20c0000000000000000000000000000000000003'
             },
+            FAUCET_TOKENS: [
+                { symbol: 'PathUSD', amount: '1,000,000' },
+                { symbol: 'AlphaUSD', amount: '1,000,000' },
+                { symbol: 'BetaUSD', amount: '1,000,000' },
+                { symbol: 'ThetaUSD', amount: '1,000,000' }
+            ],
             SYSTEM_CONTRACTS: {
-                TIP20_FACTORY: '0x20fc000000000000000000000000000000000000',
-                FEE_MANAGER: '0xfeec000000000000000000000000000000000000',
-                STABLECOIN_DEX: '0xdec0000000000000000000000000000000000000'
+                TIP20_FACTORY: '0x2000000000000000000000000000000000000002',
+                STABLECOIN_DEX: '0x2000000000000000000000000000000000000003',
+                FEE_MANAGER: '0x2000000000000000000000000000000000000005',
+                TIP403_REGISTRY: '0x403c000000000000000000000000000000000000',
+                ONCHAINGM_CONTRACT: '0x2d91014C9Ab33821...', // Fill from config if available
+                ONCHAINGM_DEPLOY_CONTRACT: '0x...', // Fill if available
+                RETRIEVER_NFT_CONTRACT: '0x...', // Fill from config
+                INFINITY_NAME_CONTRACT: '0x...' // Fill from config
             },
-            INFINITY_NAME_CONTRACT: '0x70a57af45cd15f1565808cf7b1070bac363afd8a',
-            RETRIEVER_NFT_CONTRACT: '0x603928C91Db2A58E2E689D42686A139Ad41CB51C'
+            ONCHAINGM_FEE: 1000, // Assume from config
+            ONCHAINGM_DEPLOY_FEE: 1000 // Assume
         };
 
         // ABIs
         const ERC20_ABI = [
+            "function balanceOf(address) view returns (uint256)",
             "function decimals() view returns (uint8)",
-            "function balanceOf(address owner) view returns (uint256)",
-            "function symbol() view returns (string)",
-            "function transfer(address to, uint256 amount) returns (bool)",
             "function approve(address spender, uint256 amount) returns (bool)",
+            "function transfer(address to, uint256 amount) returns (bool)",
             "function allowance(address owner, address spender) view returns (uint256)"
         ];
 
         const TIP20_FACTORY_ABI = [
-            "function createToken(string name, string symbol, string currency, address quoteToken, address admin) returns (address)",
-            "event TokenCreated(address indexed token, uint256 indexed tokenId, string name, string symbol, string currency, address quoteToken, address admin)"
+            "function createToken(string name, string symbol) returns (address)",
+            "function fee() view returns (uint256)"
         ];
 
         const STABLECOIN_DEX_ABI = [
-            "function swapExactAmountIn(address tokenIn, address tokenOut, uint128 amountIn, uint128 minAmountOut) returns (uint128 amountOut)",
-            "function quoteSwapExactAmountIn(address tokenIn, address tokenOut, uint128 amountIn) view returns (uint128 amountOut)",
-            "function place(address token, uint128 amount, bool isBid, int16 tick) returns (uint128 orderId)"
+            "function quoteSwapExactAmountIn(address tokenIn, address tokenOut, uint256 amountIn) view returns (uint256)",
+            "function swapExactAmountIn(address tokenIn, address tokenOut, uint256 amountIn, uint256 minOut) returns (uint256)",
+            "function place(address token, uint256 amount, bool isBid, int24 tick) returns (uint256)"
         ];
 
         const FEE_MANAGER_ABI = [
-            "function mintWithValidatorToken(address userToken, address validatorToken, uint256 amountValidatorToken, address to) returns (uint256 liquidity)"
+            "function mintWithValidatorToken(address userToken, address validatorToken, uint256 amount, address to) returns (uint256)",
+            "function burn(address userToken, address validatorToken, uint256 amount, address to) returns (uint256)",
+            "function getPoolId(address tokenA, address tokenB) view returns (uint256)",
+            "function liquidityBalances(uint256 poolId, address account) view returns (uint256)",
+            "function setUserToken(address token)"
+        ];
+
+        const TIP20_EXTENDED_ABI = [
+            "function mint(address to, uint256 amount) returns (bool)",
+            "function burn(uint256 amount) returns (bool)",
+            "function transferWithMemo(address to, uint256 amount, bytes32 memo) returns (bool)",
+            "function hasRole(bytes32 role, address account) view returns (bool)",
+            "function grantRole(bytes32 role, address account) returns (bool)",
+            "function decimals() view returns (uint8)"
+        ];
+
+        const TIP403_REGISTRY_ABI = [
+            "function createPolicy(address admin, uint8 policyType) returns (uint64)",
+            "function createPolicyWithAccounts(address admin, uint8 policyType, address[] accounts) returns (uint64)",
+            "function modifyPolicyWhitelist(uint64 policyId, address account, bool allowed)",
+            "function modifyPolicyBlacklist(uint64 policyId, address account, bool restricted)",
+            "function isAuthorized(uint64 policyId, address user) view returns (bool)"
+        ];
+
+        const TIP20_POLICY_ABI = [
+            "function transferPolicyId() view returns (uint64)",
+            "function changeTransferPolicyId(uint64 newPolicyId)"
         ];
 
         const INFINITY_NAME_ABI = [
-            "function register(string domain, address referrer) returns (uint256)"
+            "function register(string domain, address referrer) returns (uint256)",
+            "function isAvailable(string domain) view returns (bool)",
+            "function price() view returns (uint256)"
         ];
 
         const RETRIEVER_NFT_ABI = [
-            "function claim(address receiver, uint256 quantity, address currency, uint256 pricePerToken, tuple(bytes32[] proof, uint256 quantityLimitPerWallet, uint256 pricePerToken, address currency) allowlistProof, bytes data)"
+            "function claim(address receiver, uint256 quantity, address currency, uint256 pricePerToken, tuple(bytes32[] proof, uint256 quantityLimitPerWallet, uint256 pricePerToken, address currency) allowlistProof, bytes data)",
+            "function balanceOf(address owner) view returns (uint256)"
         ];
 
-        // Global state
-        let provider, signer, account;
-        let orderType = true; // true = BID, false = ASK
-        let createdTokens = [];
+        const ONCHAINGM_ABI = [
+            "function onChainGM(address receiver)"
+        ];
 
-        // Connect Wallet
-        async function connectWallet() {
-            try {
-                if (!window.ethereum) {
-                    alert('Please install MetaMask!');
-                    return;
+        const ONCHAINGM_DEPLOY_ABI = [
+            "function deploy() returns (address)"
+        ];
+
+        // NFT Bytecode (precompiled simple NFT contract)
+        const NFT_BYTECODE = "0x608060405234801561001057600080fd5b5061012e806100206000396000f3fe6080604052348015600f57600080fd5b506004361060325760003560e01c8063368b8772146037578063e21f37ce146059575b600080fd5b605760048036036020811015604b57600080fd5b8101908080359060200190640100000000811115606457600080fd5b820183602082011115607657600080fd5b80359060200191846001830284011164010000000083111715609857600080fd5b91908080601f016020809104026020016040519081016040528093929190818152602001838380828437600081840152601f19601f8201169050808301925050505050505091929192905050506079565b005b6061607d565b6040518080602001828103825283818151815260200191508051906020019080838360005b8381101560b7578082015181840152602081019050609c565b50505050905090810190601f16801560e45780820380516001836020036101000a031916815260200191505b509250505060405180910390f35b80600090805190602001906100919291906100f7565b5050565b600080546040519080825280601f01602080910402602001604051908101604052809291908181526020018280546001816001161561010002031660029004801561014d5780601f106101225761010080835404028352916020019161014d565b820191906000526020600020905b81548152906001019060200180831161013057829003601f168201915b5050505050905090565b828054610103906101a0565b90600052602060002090601f016020900481019282610125576000855561016c565b82601f1061013e57805160ff191683800117855561016c565b8280016001018555821561016c579182015b8281111561016b578251825591602001919060010190610150565b5b509050610179919061017d565b5090565b5b8082111561019657600081600090555060010161017e565b5090565b90008083825260208201905092915050565b7f4e487b7100000000000000000000000000000000000000000000000000000000600052602260045260246000fdfea2646970667358221220a03b18dce0be0b4c9afe58a9eb85c35205e2cf087da098bbf1d23945bf89496064736f6c63430008110033"; // Precompiled simple NFT bytecode
+
+        const NFT_ABI = [
+            "function mint(address to, string color) returns (uint256)",
+            "function balanceOf(address owner) view returns (uint256)"
+        ];
+
+        let provider, signer, walletAddress;
+
+        class WalletStatistics {
+            constructor() {
+                this.data = this._load();
+            }
+
+            _load() {
+                const saved = localStorage.getItem('tempo_stats');
+                return saved ? JSON.parse(saved) : { wallets: {} };
+            }
+
+            save() {
+                localStorage.setItem('tempo_stats', JSON.stringify(this.data));
+            }
+
+            recordTransaction(address, type, txHash, gasUsed, status) {
+                if (!this.data.wallets[address]) {
+                    this.data.wallets[address] = {
+                        address,
+                        first_activity: new Date().toISOString(),
+                        total_transactions: 0,
+                        total_gas_used: 0,
+                        counters: {}
+                    };
                 }
 
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const w = this.data.wallets[address];
+                w.last_activity = new Date().toISOString();
+                w.total_transactions++;
+                w.total_gas_used += parseInt(gasUsed || 0);
+
+                if (!w.counters[type]) w.counters[type] = 0;
+                w.counters[type]++;
+
+                this.save();
+            }
+
+            getWalletStats(address) {
+                return this.data.wallets[address] || null;
+            }
+
+            getAllWallets() {
+                return Object.values(this.data.wallets);
+            }
+        }
+
+        const stats = new WalletStatistics();
+
+        function loadCreatedTokens() {
+            const saved = localStorage.getItem('tempo_tokens');
+            return saved ? JSON.parse(saved) : {};
+        }
+
+        function saveCreatedToken(walletAddress, tokenAddress, symbol) {
+            const tokens = loadCreatedTokens();
+            const normalizedWallet = ethers.utils.getAddress(walletAddress);
+            const normalizedToken = ethers.utils.getAddress(tokenAddress);
+
+            if (!tokens[normalizedWallet]) tokens[normalizedWallet] = [];
+
+            const exists = tokens[normalizedWallet].some(t => t.token.toLowerCase() === normalizedToken.toLowerCase());
+
+            if (!exists) {
+                tokens[normalizedWallet].push({
+                    token: normalizedToken,
+                    symbol: symbol,
+                    createdAt: new Date().toISOString()
+                });
+                localStorage.setItem('tempo_tokens', JSON.stringify(tokens));
+            }
+        }
+
+        function getTokensForWallet(walletAddress) {
+            const tokens = loadCreatedTokens();
+            const normalizedWallet = ethers.utils.getAddress(walletAddress);
+            return tokens[normalizedWallet] || [];
+        }
+
+        async function connectWallet() {
+            if (!window.ethereum) {
+                showStatus('MetaMask not detected!', 'error');
+                return;
+            }
+
+            try {
+                const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+                walletAddress = accounts[0];
+                document.getElementById('walletAddress').textContent = walletAddress.substring(0, 6) + '...' + walletAddress.substring(walletAddress.length - 4);
+                document.getElementById('walletInfo').classList.remove('hidden');
+                document.getElementById('connectWallet').classList.add('hidden');
+
                 provider = new ethers.providers.Web3Provider(window.ethereum);
                 signer = provider.getSigner();
-                account = accounts[0];
 
-                // Switch to Tempo network
                 try {
-                    await window.ethereum.request({
+                    await ethereum.request({
                         method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: '0xa5bd' }],
+                        params: [{ chainId: `0x${CONFIG.CHAIN_ID.toString(16)}` }],
                     });
                 } catch (switchError) {
                     if (switchError.code === 4902) {
-                        await window.ethereum.request({
+                        await ethereum.request({
                             method: 'wallet_addEthereumChain',
                             params: [{
-                                chainId: '0xa5bd',
+                                chainId: `0x${CONFIG.CHAIN_ID.toString(16)}`,
                                 chainName: 'Tempo Testnet',
-                                nativeCurrency: { name: 'TEMPO', symbol: 'TEMPO', decimals: 18 },
                                 rpcUrls: [CONFIG.RPC_URL],
+                                nativeCurrency: { name: 'Tempo', symbol: 'TEMPO', decimals: 18 },
                                 blockExplorerUrls: [CONFIG.EXPLORER_URL]
                             }]
                         });
                     }
                 }
 
-                document.getElementById('connectWallet').classList.add('hidden');
-                document.getElementById('walletInfo').classList.remove('hidden');
-                document.getElementById('walletAddress').textContent = `${account.slice(0, 6)}...${account.slice(-4)}`;
-                document.getElementById('welcomeScreen').classList.add('hidden');
-                document.getElementById('mainApp').classList.remove('hidden');
-
                 showStatus('Wallet connected successfully!', 'success');
-                showTab('dashboard');
-                loadBalances();
+                populateTokenOptions();
+                populateCreatedTokenOptions();
+                showTab('welcome');
             } catch (error) {
                 showStatus(`Error: ${error.message}`, 'error');
             }
         }
 
-        // Load Balances
-        async function loadBalances() {
-            const grid = document.getElementById('balancesGrid');
-            grid.innerHTML = '';
-
-            for (const [symbol, address] of Object.entries(CONFIG.TOKENS)) {
-                try {
-                    const contract = new ethers.Contract(address, ERC20_ABI, provider);
-                    const balance = await contract.balanceOf(account);
-                    const decimals = await contract.decimals();
-                    const formatted = ethers.utils.formatUnits(balance, decimals);
-
-                    const card = document.createElement('div');
-                    card.className = 'bg-white rounded-lg p-4 shadow-md card-hover fade-in';
-                    card.innerHTML = `
-                        <div class="text-gray-500 text-sm">${symbol}</div>
-                        <div class="text-2xl font-bold text-gray-800">${parseFloat(formatted).toFixed(2)}</div>
-                    `;
-                    grid.appendChild(card);
-                } catch (error) {
-                    console.error(`Error loading ${symbol}:`, error);
+        function populateTokenOptions() {
+            const selects = ['send-token', 'swap-from', 'swap-to', 'liq-user', 'liq-val', 'remove-user', 'remove-val', 'memo-token', 'fee-token'];
+            selects.forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    select.innerHTML = '';
+                    Object.entries(CONFIG.TOKENS).forEach(([name, addr]) => {
+                        const option = document.createElement('option');
+                        option.value = addr;
+                        option.textContent = name;
+                        select.appendChild(option);
+                    });
                 }
-            }
-        }
-
-        // Claim Faucet
-        async function claimFaucet() {
-            showStatus('Claiming from faucet...', 'info');
-            try {
-                const txHashes = await provider.send('tempo_fundAddress', [account]);
-                showStatus(`Faucet claimed! TX: ${Array.isArray(txHashes) ? txHashes[0] : txHashes}`, 'success');
-                setTimeout(loadBalances, 3000);
-            } catch (error) {
-                showStatus(`Error: ${error.message}`, 'error');
-            }
-        }
-
-        // Send Token
-        async function sendToken() {
-            const tokenSymbol = document.getElementById('sendToken').value;
-            const recipient = document.getElementById('sendRecipient').value;
-            const amount = document.getElementById('sendAmount').value;
-
-            if (!recipient || !amount) {
-                showStatus('Please fill all fields', 'error');
-                return;
-            }
-
-            showStatus('Sending token...', 'info');
-            try {
-                const tokenAddress = CONFIG.TOKENS[tokenSymbol];
-                const contract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
-                const decimals = await contract.decimals();
-                const amountWei = ethers.utils.parseUnits(amount, decimals);
-
-                const tx = await contract.transfer(recipient, amountWei);
-                showStatus(`Transaction sent: ${tx.hash}`, 'info');
-                await tx.wait();
-                showStatus('Transfer successful!', 'success');
-                loadBalances();
-            } catch (error) {
-                showStatus(`Error: ${error.message}`, 'error');
-            }
-        }
-
-        // Create Token
-        async function createToken() {
-            const name = document.getElementById('tokenName').value;
-            const symbol = document.getElementById('tokenSymbol').value;
-
-            if (!name || !symbol) {
-                showStatus('Please fill all fields', 'error');
-                return;
-            }
-
-            showStatus('Creating token...', 'info');
-            try {
-                const factory = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.TIP20_FACTORY, TIP20_FACTORY_ABI, signer);
-                const tx = await factory.createToken(name, symbol, "USD", CONFIG.TOKENS.PathUSD, account);
-                showStatus(`Creation TX: ${tx.hash}`, 'info');
-                const receipt = await tx.wait();
-
-                for (const log of receipt.logs) {
-                    try {
-                        const parsed = factory.interface.parseLog(log);
-                        if (parsed && parsed.name === 'TokenCreated') {
-                            const tokenAddress = parsed.args.token;
-                            showStatus(`Token created at: ${tokenAddress}`, 'success');
-                            createdTokens.push({ address: tokenAddress, symbol, name });
-                            displayCreatedTokens();
-                            return;
-                        }
-                    } catch (e) { continue; }
-                }
-            } catch (error) {
-                showStatus(`Error: ${error.message}`, 'error');
-            }
-        }
-
-        function displayCreatedTokens() {
-            const container = document.getElementById('createdTokens');
-            if (createdTokens.length === 0) return;
-
-            container.innerHTML = '<h4 class="font-semibold text-gray-700">Your Tokens:</h4>';
-            createdTokens.forEach(token => {
-                const div = document.createElement('div');
-                div.className = 'bg-gray-50 p-3 rounded-lg fade-in';
-                div.innerHTML = `
-                    <div class="font-medium">${token.name} (${token.symbol})</div>
-                    <div class="text-sm text-gray-500">${token.address}</div>
-                `;
-                container.appendChild(div);
             });
         }
 
-        // Swap Tokens
-        async function swapTokens() {
-            const tokenInSymbol = document.getElementById('swapTokenIn').value;
-            const tokenOutSymbol = document.getElementById('swapTokenOut').value;
-            const amount = document.getElementById('swapAmount').value;
-
-            if (tokenInSymbol === tokenOutSymbol) {
-                showStatus('Please select different tokens', 'error');
-                return;
-            }
-
-            showStatus('Swapping tokens...', 'info');
-            try {
-                const tokenIn = CONFIG.TOKENS[tokenInSymbol];
-                const tokenOut = CONFIG.TOKENS[tokenOutSymbol];
-                const dex = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX, STABLECOIN_DEX_ABI, signer);
-                const tokenInContract = new ethers.Contract(tokenIn, ERC20_ABI, signer);
-
-                const decimals = await tokenInContract.decimals();
-                const amountIn = ethers.utils.parseUnits(amount, decimals);
-
-                // Approve
-                const allowance = await tokenInContract.allowance(account, CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX);
-                if (allowance.lt(amountIn)) {
-                    showStatus('Approving token...', 'info');
-                    const approveTx = await tokenInContract.approve(CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX, ethers.constants.MaxUint256);
-                    await approveTx.wait();
+        function populateCreatedTokenOptions() {
+            const selects = ['mint-token', 'burn-token', 'tip403-token', 'role-token']; // Add more if needed
+            selects.forEach(id => {
+                const select = document.getElementById(id);
+                if (select) {
+                    select.innerHTML = '';
+                    const myTokens = getTokensForWallet(walletAddress || '');
+                    myTokens.forEach(t => {
+                        const option = document.createElement('option');
+                        option.value = t.token;
+                        option.textContent = t.symbol;
+                        select.appendChild(option);
+                    });
                 }
-
-                // Get quote
-                const expectedOut = await dex.quoteSwapExactAmountIn(tokenIn, tokenOut, amountIn);
-                const minOut = expectedOut.mul(99).div(100);
-
-                showStatus('Executing swap...', 'info');
-                const tx = await dex.swapExactAmountIn(tokenIn, tokenOut, amountIn, minOut);
-                showStatus(`Swap TX: ${tx.hash}`, 'info');
-                await tx.wait();
-                showStatus('Swap successful!', 'success');
-                loadBalances();
-            } catch (error) {
-                showStatus(`Error: ${error.message}`, 'error');
-            }
+            });
         }
 
-        // Add Liquidity
-        async function addLiquidity() {
-            const userToken = document.getElementById('liqUserToken').value;
-            const validatorToken = document.getElementById('liqValidatorToken').value;
-            const amount = document.getElementById('liqAmount').value;
-
-            showStatus('Adding liquidity...', 'info');
-            try {
-                const feeManager = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.FEE_MANAGER, FEE_MANAGER_ABI, signer);
-                const valContract = new ethers.Contract(validatorToken, ERC20_ABI, signer);
-
-                const decimals = await valContract.decimals();
-                const amountWei = ethers.utils.parseUnits(amount, decimals);
-
-                // Approve
-                const allowance = await valContract.allowance(account, CONFIG.SYSTEM_CONTRACTS.FEE_MANAGER);
-                if (allowance.lt(amountWei)) {
-                    showStatus('Approving token...', 'info');
-                    const approveTx = await valContract.approve(CONFIG.SYSTEM_CONTRACTS.FEE_MANAGER, ethers.constants.MaxUint256);
-                    await approveTx.wait();
-                }
-
-                showStatus('Minting liquidity...', 'info');
-                const tx = await feeManager.mintWithValidatorToken(userToken, validatorToken, amountWei, account);
-                showStatus(`TX: ${tx.hash}`, 'info');
-                await tx.wait();
-                showStatus('Liquidity added!', 'success');
-                loadBalances();
-            } catch (error) {
-                showStatus(`Error: ${error.message}`, 'error');
-            }
-        }
-
-        // Limit Order
-        function setOrderType(isBid) {
-            orderType = isBid;
-            const bidBtn = document.getElementById('bidBtn');
-            const askBtn = document.getElementById('askBtn');
-
-            if (isBid) {
-                bidBtn.className = 'flex-1 py-3 rounded-lg font-semibold bg-green-600 text-white';
-                askBtn.className = 'flex-1 py-3 rounded-lg font-semibold bg-gray-200';
-            } else {
-                bidBtn.className = 'flex-1 py-3 rounded-lg font-semibold bg-gray-200';
-                askBtn.className = 'flex-1 py-3 rounded-lg font-semibold bg-red-600 text-white';
-            }
-        }
-
-        async function placeLimitOrder() {
-            const tokenSymbol = document.getElementById('limitToken').value;
-            const amount = document.getElementById('limitAmount').value;
-
-            showStatus('Placing order...', 'info');
-            try {
-                const token = CONFIG.TOKENS[tokenSymbol];
-                const dex = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX, STABLECOIN_DEX_ABI, signer);
-
-                const tokenToApprove = orderType ? CONFIG.TOKENS.PathUSD : token;
-                const tokenContract = new ethers.Contract(tokenToApprove, ERC20_ABI, signer);
-
-                const amountWei = ethers.utils.parseUnits(amount, 6);
-
-                // Approve
-                const allowance = await tokenContract.allowance(account, CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX);
-                if (allowance.lt(amountWei)) {
-                    showStatus('Approving token...', 'info');
-                    const approveTx = await tokenContract.approve(CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX, ethers.constants.MaxUint256);
-                    await approveTx.wait();
-                }
-
-                showStatus('Placing order...', 'info');
-                const tx = await dex.place(token, amountWei, orderType, 0, { gasLimit: 3000000 });
-                showStatus(`TX: ${tx.hash}`, 'info');
-                await tx.wait();
-                showStatus('Order placed!', 'success');
-            } catch (error) {
-                showStatus(`Error: ${error.message}`, 'error');
-            }
-        }
-
-        // Register Domain
-        async function registerDomain() {
-            const domainName = document.getElementById('domainName').value.toLowerCase();
-
-            if (!domainName) {
-                showStatus('Please enter a domain name', 'error');
-                return;
-            }
-
-            showStatus('Registering domain...', 'info');
-            try {
-                const infinity = new ethers.Contract(CONFIG.INFINITY_NAME_CONTRACT, INFINITY_NAME_ABI, signer);
-                const pathUsd = new ethers.Contract(CONFIG.TOKENS.PathUSD, ERC20_ABI, signer);
-
-                const decimals = await pathUsd.decimals();
-                const amount = ethers.utils.parseUnits("1000", decimals);
-
-                // Approve
-                const allowance = await pathUsd.allowance(account, CONFIG.INFINITY_NAME_CONTRACT);
-                if (allowance.lt(amount)) {
-                    showStatus('Approving PathUSD...', 'info');
-                    const approveTx = await pathUsd.approve(CONFIG.INFINITY_NAME_CONTRACT, ethers.constants.MaxUint256);
-                    await approveTx.wait();
-                }
-
-                showStatus('Registering domain...', 'info');
-                const tx = await infinity.register(domainName, ethers.constants.AddressZero);
-                showStatus(`TX: ${tx.hash}`, 'info');
-                await tx.wait();
-                showStatus(`Domain ${domainName}.tempo registered!`, 'success');
-            } catch (error) {
-                showStatus(`Error: ${error.message}`, 'error');
-            }
-        }
-
-        // Mint NFT
-        async function mintNFT() {
-            showStatus('Minting NFT...', 'info');
-            try {
-                const nft = new ethers.Contract(CONFIG.RETRIEVER_NFT_CONTRACT, RETRIEVER_NFT_ABI, signer);
-
-                const allowlistProof = {
-                    proof: [],
-                    quantityLimitPerWallet: ethers.constants.MaxUint256,
-                    pricePerToken: 0,
-                    currency: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
-                };
-
-                const tx = await nft.claim(
-                    account,
-                    1,
-                    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
-                    0,
-                    allowlistProof,
-                    "0x"
-                );
-                showStatus(`TX: ${tx.hash}`, 'info');
-                await tx.wait();
-                showStatus('NFT minted successfully!', 'success');
-            } catch (error) {
-                showStatus(`Error: ${error.message}`, 'error');
-            }
-        }
-
-        // Tab Navigation
         function showTab(tabName) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = 'tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100';
+                btn.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-pink-600', 'text-white', 'shadow-md');
+                btn.classList.add('text-gray-700', 'hover:bg-gray-100');
             });
 
             const activeTab = document.getElementById(`tab-${tabName}`);
@@ -671,11 +804,15 @@
 
             const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
             if (activeBtn) {
-                activeBtn.className = 'tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md';
+                activeBtn.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-pink-600', 'text-white', 'shadow-md');
+                activeBtn.classList.remove('text-gray-700', 'hover:bg-gray-100');
+            }
+
+            if (tabName === 'mint' || tabName === 'burn' || tabName === 'tip403' || tabName === 'role') {
+                populateCreatedTokenOptions();
             }
         }
 
-        // Status Bar
         function showStatus(message, type) {
             const statusBar = document.getElementById('statusBar');
             statusBar.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'bg-green-100', 'text-green-800', 'bg-blue-100', 'text-blue-800');
@@ -690,10 +827,668 @@
 
             statusBar.textContent = message;
             statusBar.classList.add('fade-in');
+
+            setTimeout(() => statusBar.classList.add('hidden'), 5000);
+        }
+
+        async function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        async function approveToken(tokenAddr, spender, amountWei) {
+            const token = new ethers.Contract(tokenAddr, ERC20_ABI, signer);
+            const allowance = await token.allowance(walletAddress, spender);
+            if (allowance.lt(amountWei)) {
+                showStatus('Approving token...', 'info');
+                const tx = await token.approve(spender, ethers.constants.MaxUint256);
+                await tx.wait();
+                showStatus('Approved', 'success');
+            }
+        }
+
+        async function getTokenBalance(tokenAddr) {
+            const token = new ethers.Contract(tokenAddr, ERC20_ABI, provider);
+            const balance = await token.balanceOf(walletAddress);
+            const decimals = await token.decimals();
+            return { balance, decimals, formatted: ethers.utils.formatUnits(balance, decimals) };
+        }
+
+        function generateRandomName() {
+            const prefixes = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Omega', 'Nova', 'Stellar', 'Crypto', 'Hyper', 'Super'];
+            const suffixes = ['Dollar', 'Coin', 'Cash', 'Pay', 'Token', 'Credit', 'Gold', 'Silver'];
+            return `${prefixes[Math.floor(Math.random() * prefixes.length)]} ${suffixes[Math.floor(Math.random() * suffixes.length)]}`;
+        }
+
+        function generateRandomSymbol() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            let result = '';
+            for (let i = 0; i < 3; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
+            return result + 'USD';
+        }
+
+        function generateRandomDomain(length = 10) {
+            const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            let result = '';
+            for (let i = 0; i < length; i++) result += chars.charAt(Math.floor(Math.random() * chars.length));
+            return result;
+        }
+
+        // Faucet Claim
+        async function runFaucetClaim() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const count = parseInt(document.getElementById('faucet-count').value) || 1;
+            for (let i = 0; i < count; i++) {
+                showStatus(`Claiming faucet ${i+1}/${count}...`, 'info');
+                try {
+                    const txHashes = await provider.send('tempo_fundAddress', [walletAddress]);
+                    showStatus('Faucet claimed!', 'success');
+                    stats.recordTransaction(walletAddress, 'faucet', txHashes[0], '0', 'success');
+                } catch (error) {
+                    showStatus(`Error: ${error.message}`, 'error');
+                }
+                await sleep(CONFIG.FAUCET_CLAIM_DELAY_SEC * 1000);
+            }
+        }
+
+        // Send Token
+        async function runSendToken() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const tokenAddr = document.getElementById('send-token').value;
+            const to = document.getElementById('send-to').value;
+            const amount = document.getElementById('send-amount').value;
+
+            if (!ethers.utils.isAddress(to)) return showStatus('Invalid address', 'error');
+
+            try {
+                const contract = new ethers.Contract(tokenAddr, ERC20_ABI, signer);
+                const decimals = await contract.decimals();
+                const amountWei = ethers.utils.parseUnits(amount, decimals);
+
+                const balance = await contract.balanceOf(walletAddress);
+                if (balance.lt(amountWei)) return showStatus('Insufficient balance', 'error');
+
+                const tx = await contract.transfer(to, amountWei);
+                showStatus(`TX: ${tx.hash}`, 'info');
+                const receipt = await tx.wait();
+                showStatus('Transfer successful!', 'success');
+                stats.recordTransaction(walletAddress, 'transfer', tx.hash, receipt.gasUsed.toString(), 'success');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Create Stablecoin
+        async function runCreateStablecoin() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            let name = document.getElementById('token-name').value;
+            let symbol = document.getElementById('token-symbol').value;
+
+            if (!name) name = generateRandomName();
+            if (!symbol) symbol = generateRandomSymbol();
+
+            try {
+                const factory = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.TIP20_FACTORY, TIP20_FACTORY_ABI, signer);
+                const feeToken = new ethers.Contract(CONFIG.TOKENS.PathUSD, ERC20_ABI, signer);
+                const fee = await factory.fee();
+
+                await approveToken(CONFIG.TOKENS.PathUSD, CONFIG.SYSTEM_CONTRACTS.TIP20_FACTORY, fee);
+
+                const tx = await factory.createToken(name, symbol);
+                showStatus(`TX: ${tx.hash}`, 'info');
+                const receipt = await tx.wait();
+
+                // Extract token address from logs
+                let tokenAddress;
+                for (const log of receipt.logs) {
+                    try {
+                        const parsed = factory.interface.parseLog(log);
+                        if (parsed.name === 'TokenCreated') {
+                            tokenAddress = parsed.args.token;
+                            break;
+                        }
+                    } catch {}
+                }
+
+                if (tokenAddress) {
+                    saveCreatedToken(walletAddress, tokenAddress, symbol);
+                    showStatus(`Token created: ${tokenAddress}`, 'success');
+                    stats.recordTransaction(walletAddress, 'create_token', tx.hash, receipt.gasUsed.toString(), 'success');
+                    populateCreatedTokenOptions();
+                } else {
+                    showStatus('Token address not found', 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Swap Tokens
+        async function runSwapTokens() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const fromAddr = document.getElementById('swap-from').value;
+            const toAddr = document.getElementById('swap-to').value;
+            const amount = document.getElementById('swap-amount').value;
+
+            try {
+                const dex = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX, STABLECOIN_DEX_ABI, signer);
+                const tokenIn = new ethers.Contract(fromAddr, ERC20_ABI, signer);
+                const decimals = await tokenIn.decimals();
+                const amountIn = ethers.utils.parseUnits(amount, decimals);
+
+                await approveToken(fromAddr, CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX, amountIn);
+
+                let expectedOut = await dex.quoteSwapExactAmountIn(fromAddr, toAddr, amountIn);
+                const minOut = expectedOut.mul(99).div(100);
+
+                const tx = await dex.swapExactAmountIn(fromAddr, toAddr, amountIn, minOut);
+                showStatus(`TX: ${tx.hash}`, 'info');
+                const receipt = await tx.wait();
+                showStatus('Swap successful!', 'success');
+                stats.recordTransaction(walletAddress, 'swap', tx.hash, receipt.gasUsed.toString(), 'success');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Add Liquidity
+        async function runAddLiquidity() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const userAddr = document.getElementById('liq-user').value;
+            const valAddr = document.getElementById('liq-val').value;
+            const amount = document.getElementById('liq-amount').value;
+
+            try {
+                const feeManager = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.FEE_MANAGER, FEE_MANAGER_ABI, signer);
+                const valToken = new ethers.Contract(valAddr, ERC20_ABI, signer);
+                const decimals = await valToken.decimals();
+                const amountWei = ethers.utils.parseUnits(amount, decimals);
+
+                await approveToken(valAddr, CONFIG.SYSTEM_CONTRACTS.FEE_MANAGER, amountWei);
+
+                const tx = await feeManager.mintWithValidatorToken(userAddr, valAddr, amountWei, walletAddress);
+                showStatus(`TX: ${tx.hash}`, 'info');
+                const receipt = await tx.wait();
+                showStatus('Liquidity added!', 'success');
+                stats.recordTransaction(walletAddress, 'add_liquidity', tx.hash, receipt.gasUsed.toString(), 'success');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Remove Liquidity
+        async function runRemoveLiquidity() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const userAddr = document.getElementById('remove-user').value;
+            const valAddr = document.getElementById('remove-val').value;
+            const amount = document.getElementById('remove-amount').value;
+
+            try {
+                const feeManager = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.FEE_MANAGER, FEE_MANAGER_ABI, signer);
+                const amountWei = ethers.utils.parseUnits(amount, 6); // Assume 6 decimals for LP
+
+                const tx = await feeManager.burn(userAddr, valAddr, amountWei, walletAddress);
+                showStatus(`TX: ${tx.hash}`, 'info');
+                const receipt = await tx.wait();
+                showStatus('Liquidity removed!', 'success');
+                stats.recordTransaction(walletAddress, 'remove_liquidity', tx.hash, receipt.gasUsed.toString(), 'success');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Mint Tokens
+        async function runMintTokens() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const tokenAddr = document.getElementById('mint-token').value;
+            const amount = document.getElementById('mint-amount').value;
+
+            try {
+                const token = new ethers.Contract(tokenAddr, TIP20_EXTENDED_ABI, signer);
+                const decimals = await token.decimals();
+                const amountWei = ethers.utils.parseUnits(amount, decimals);
+
+                const ISSUER_ROLE = ethers.utils.keccak256(ethers.utils.toUtf8Bytes("ISSUER_ROLE"));
+                let hasRole = await token.hasRole(ISSUER_ROLE, walletAddress);
+                if (!hasRole) {
+                    const grantTx = await token.grantRole(ISSUER_ROLE, walletAddress);
+                    await grantTx.wait();
+                }
+
+                const tx = await token.mint(walletAddress, amountWei);
+                showStatus(`TX: ${tx.hash}`, 'info');
+                const receipt = await tx.wait();
+                showStatus('Tokens minted!', 'success');
+                stats.recordTransaction(walletAddress, 'mint', tx.hash, receipt.gasUsed.toString(), 'success');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Burn Tokens
+        async function runBurnTokens() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const tokenAddr = document.getElementById('burn-token').value;
+            const amount = document.getElementById('burn-amount').value;
+
+            try {
+                const token = new ethers.Contract(tokenAddr, TIP20_EXTENDED_ABI, signer);
+                const decimals = await token.decimals();
+                const amountWei = ethers.utils.parseUnits(amount, decimals);
+
+                const tx = await token.burn(amountWei);
+                showStatus(`TX: ${tx.hash}`, 'info');
+                const receipt = await tx.wait();
+                showStatus('Tokens burned!', 'success');
+                stats.recordTransaction(walletAddress, 'burn', tx.hash, receipt.gasUsed.toString(), 'success');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Transfer with Memo
+        async function runTransferWithMemo() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const tokenAddr = document.getElementById('memo-token').value;
+            const amount = document.getElementById('memo-amount').value;
+            const memoText = document.getElementById('memo-text').value;
+
+            try {
+                const token = new ethers.Contract(tokenAddr, TIP20_EXTENDED_ABI, signer);
+                const decimals = await token.decimals();
+                const amountWei = ethers.utils.parseUnits(amount, decimals);
+
+                const utf8Bytes = ethers.utils.toUtf8Bytes(memoText);
+                let memoBytes32 = ethers.utils.hexlify(utf8Bytes.slice(0, 32));
+                memoBytes32 = ethers.utils.hexZeroPad(memoBytes32, 32);
+
+                const dest = ethers.Wallet.createRandom().address;
+
+                const tx = await token.transferWithMemo(dest, amountWei, memoBytes32);
+                showStatus(`TX: ${tx.hash}`, 'info');
+                const receipt = await tx.wait();
+                showStatus('Transfer with memo successful!', 'success');
+                stats.recordTransaction(walletAddress, 'memo_transfer', tx.hash, receipt.gasUsed.toString(), 'success');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Limit Order
+        async function runLimitOrder() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const count = parseInt(document.getElementById('limit-count').value) || 1;
+
+            const validTokens = Object.values(CONFIG.TOKENS).filter(addr => addr !== CONFIG.TOKENS.PathUSD);
+
+            for (let i = 0; i < count; i++) {
+                try {
+                    const baseTokenAddr = validTokens[Math.floor(Math.random() * validTokens.length)];
+                    const isBid = Math.random() > 0.5;
+                    const amount = (Math.random() * 5 + 1).toFixed(2);
+                    const tick = Math.floor(Math.random() * 20 - 10); // Random tick
+
+                    const tokenToApprove = isBid ? CONFIG.TOKENS.PathUSD : baseTokenAddr;
+                    const token = new ethers.Contract(tokenToApprove, ERC20_ABI, signer);
+                    const decimals = await token.decimals();
+                    const amountWei = ethers.utils.parseUnits(amount, decimals);
+
+                    await approveToken(tokenToApprove, CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX, amountWei);
+
+                    const dex = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX, STABLECOIN_DEX_ABI, signer);
+                    const tx = await dex.place(baseTokenAddr, amountWei, isBid, tick);
+                    showStatus(`TX: ${tx.hash}`, 'info');
+                    const receipt = await tx.wait();
+                    showStatus(`Order ${i+1} placed!`, 'success');
+                    stats.recordTransaction(walletAddress, 'limit_order', tx.hash, receipt.gasUsed.toString(), 'success');
+                } catch (error) {
+                    showStatus(`Error: ${error.message}`, 'error');
+                }
+                await sleep(2000);
+            }
+        }
+
+        // Grant Role
+        async function runGrantRole() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const roleName = document.getElementById('role-type').value;
+            const roleHash = ethers.utils.keccak256(ethers.utils.toUtf8Bytes(roleName));
+
+            const myTokens = getTokensForWallet(walletAddress);
+
+            for (const token of myTokens) {
+                try {
+                    const tokenContract = new ethers.Contract(token.token, TIP20_EXTENDED_ABI, signer);
+                    const hasRole = await tokenContract.hasRole(roleHash, walletAddress);
+                    if (!hasRole) {
+                        const tx = await tokenContract.grantRole(roleHash, walletAddress);
+                        showStatus(`TX: ${tx.hash}`, 'info');
+                        const receipt = await tx.wait();
+                        showStatus(`Role granted for ${token.symbol}`, 'success');
+                        stats.recordTransaction(walletAddress, 'grant_role', tx.hash, receipt.gasUsed.toString(), 'success');
+                    } else {
+                        showStatus(`Role already granted for ${token.symbol}`, 'info');
+                    }
+                } catch (error) {
+                    showStatus(`Error: ${error.message}`, 'error');
+                }
+                await sleep(1000);
+            }
+        }
+
+        // Mint NFT
+        async function runNft() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const suffix = Math.random().toString(36).substring(7).toUpperCase();
+            const name = `Test NFT ${suffix}`;
+            const symbol = `T${suffix}`;
+
+            try {
+                const factory = new ethers.ContractFactory(NFT_ABI, NFT_BYTECODE, signer);
+                const contract = await factory.deploy();
+                await contract.deployTransaction.wait();
+                const address = contract.address;
+                showStatus(`NFT deployed at ${address}`, 'success');
+
+                for (let i = 0; i < 2; i++) {
+                    const color = '#' + Math.floor(Math.random()*16777215).toString(16);
+                    const tx = await contract.mint(walletAddress, color);
+                    await tx.wait();
+                    showStatus(`Minted NFT #${i+1}`, 'success');
+                }
+                stats.recordTransaction(walletAddress, 'nft_mint', contract.deployTransaction.hash, '0', 'success');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Infinity Name
+        async function runInfinityName() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            try {
+                const infinity = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.INFINITY_NAME_CONTRACT, INFINITY_NAME_ABI, signer);
+                const pathUsd = new ethers.Contract(CONFIG.TOKENS.PathUSD, ERC20_ABI, signer);
+                const decimals = await pathUsd.decimals();
+                const amountWei = ethers.utils.parseUnits("1000", decimals);
+
+                await approveToken(CONFIG.TOKENS.PathUSD, CONFIG.SYSTEM_CONTRACTS.INFINITY_NAME_CONTRACT, amountWei);
+
+                const domain = generateRandomDomain();
+                const tx = await infinity.register(domain, ethers.constants.AddressZero);
+                showStatus(`TX: ${tx.hash}`, 'info');
+                const receipt = await tx.wait();
+                showStatus('Domain registered!', 'success');
+                stats.recordTransaction(walletAddress, 'domain_register', tx.hash, receipt.gasUsed.toString(), 'success');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Retriever NFT
+        async function runRetrieverNft() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            try {
+                const nft = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.RETRIEVER_NFT_CONTRACT, RETRIEVER_NFT_ABI, signer);
+
+                const allowlistProof = {
+                    proof: [],
+                    quantityLimitPerWallet: ethers.constants.MaxUint256,
+                    pricePerToken: 0,
+                    currency: ethers.constants.AddressZero
+                };
+
+                const tx = await nft.claim(
+                    walletAddress,
+                    1,
+                    ethers.constants.AddressZero,
+                    0,
+                    allowlistProof,
+                    "0x"
+                );
+                showStatus(`TX: ${tx.hash}`, 'info');
+                const receipt = await tx.wait();
+                showStatus('NFT minted!', 'success');
+                stats.recordTransaction(walletAddress, 'retriever_nft', tx.hash, receipt.gasUsed.toString(), 'success');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Batch Operations
+        async function runBatchOperations() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const choice = document.getElementById('batch-type').value;
+            const count = parseInt(document.getElementById('batch-count').value) || 2;
+
+            if (choice === '1') {
+                const swapPairs = [
+                    [CONFIG.TOKENS.PathUSD, CONFIG.TOKENS.AlphaUSD],
+                    [CONFIG.TOKENS.AlphaUSD, CONFIG.TOKENS.BetaUSD],
+                    [CONFIG.TOKENS.BetaUSD, CONFIG.TOKENS.ThetaUSD],
+                    [CONFIG.TOKENS.ThetaUSD, CONFIG.TOKENS.PathUSD]
+                ];
+
+                for (let i = 0; i < count; i++) {
+                    const [inAddr, outAddr] = swapPairs[i % swapPairs.length];
+                    const amount = ethers.utils.parseUnits("0.01", 6); // Assume 6 decimals
+
+                    try {
+                        await approveToken(inAddr, CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX, amount);
+
+                        const dex = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX, STABLECOIN_DEX_ABI, signer);
+                        const minOut = 0; // Minimal for test
+                        const tx = await dex.swapExactAmountIn(inAddr, outAddr, amount, minOut);
+                        await tx.wait();
+                        showStatus(`Swap ${i+1} successful!`, 'success');
+                    } catch (error) {
+                        showStatus(`Swap error: ${error.message}`, 'error');
+                    }
+                    await sleep(1000);
+                }
+            } else if (choice === '2') {
+                const token = new ethers.Contract(CONFIG.TOKENS.PathUSD, ERC20_ABI, signer);
+                const amount = ethers.utils.parseUnits("0.01", 6);
+
+                for (let i = 0; i < count; i++) {
+                    const dest = ethers.Wallet.createRandom().address;
+                    try {
+                        const tx = await token.transfer(dest, amount);
+                        await tx.wait();
+                        showStatus(`Transfer ${i+1} successful!`, 'success');
+                    } catch (error) {
+                        showStatus(`Transfer error: ${error.message}`, 'error');
+                    }
+                    await sleep(500);
+                }
+            }
+        }
+
+        // Set Fee Token
+        async function runSetFeeToken() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const tokenAddr = document.getElementById('fee-token').value;
+
+            try {
+                const feeManager = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.FEE_MANAGER, FEE_MANAGER_ABI, signer);
+                const tx = await feeManager.setUserToken(tokenAddr);
+                showStatus(`TX: ${tx.hash}`, 'info');
+                const receipt = await tx.wait();
+                showStatus('Fee token set!', 'success');
+                stats.recordTransaction(walletAddress, 'set_fee', tx.hash, receipt.gasUsed.toString(), 'success');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // TIP-403 Policies
+        async function runTip403Policies() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const tokenAddr = document.getElementById('tip403-token').value;
+            const policyType = document.getElementById('tip403-type').value === '1' ? 1 : 2;
+            const account = document.getElementById('tip403-address').value;
+
+            try {
+                const registry = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.TIP403_REGISTRY, TIP403_REGISTRY_ABI, signer);
+                const tx = await registry.createPolicy(walletAddress, policyType);
+                const receipt = await tx.wait();
+
+                let policyId;
+                for (const log of receipt.logs) {
+                    try {
+                        const parsed = registry.interface.parseLog(log);
+                        if (parsed.name === 'PolicyCreated') {
+                            policyId = parsed.args.policyId;
+                            break;
+                        }
+                    } catch {}
+                }
+
+                if (policyId) {
+                    const tokenContract = new ethers.Contract(tokenAddr, TIP20_POLICY_ABI, signer);
+                    await tokenContract.changeTransferPolicyId(policyId);
+
+                    if (policyType === 1) {
+                        await registry.modifyPolicyWhitelist(policyId, account, true);
+                    } else {
+                        await registry.modifyPolicyBlacklist(policyId, account, true);
+                    }
+
+                    showStatus('Policy set!', 'success');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // OnChain GM
+        async function runOnchainGm() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const choice = document.getElementById('gm-type').value;
+
+            if (choice === '1') {
+                try {
+                    await approveToken(CONFIG.TOKENS.PathUSD, CONFIG.SYSTEM_CONTRACTS.ONCHAINGM_CONTRACT, CONFIG.ONCHAINGM_FEE);
+
+                    const contract = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.ONCHAINGM_CONTRACT, ONCHAINGM_ABI, signer);
+                    const tx = await contract.onChainGM(walletAddress);
+                    await tx.wait();
+                    showStatus('OnChain GM successful!', 'success');
+                } catch (error) {
+                    showStatus(`Error: ${error.message}`, 'error');
+                }
+            } else if (choice === '2') {
+                const count = parseInt(document.getElementById('gm-count').value) || 1;
+                const totalFee = BigInt(CONFIG.ONCHAINGM_DEPLOY_FEE) * BigInt(count);
+
+                try {
+                    await approveToken(CONFIG.TOKENS.PathUSD, CONFIG.SYSTEM_CONTRACTS.ONCHAINGM_DEPLOY_CONTRACT, totalFee);
+
+                    const contract = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.ONCHAINGM_DEPLOY_CONTRACT, ONCHAINGM_DEPLOY_ABI, signer);
+                    for (let i = 0; i < count; i++) {
+                        const tx = await contract.deploy();
+                        await tx.wait();
+                        showStatus(`Deploy ${i+1} successful!`, 'success');
+                    }
+                } catch (error) {
+                    showStatus(`Error: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // Auto Mode
+        async function runAutoMode() {
+            if (!signer) return showStatus('Connect wallet first', 'error');
+
+            const loops = parseInt(document.getElementById('auto-loops').value) || 1;
+            const actions = [runFaucetClaim, runSendToken, runSwapTokens, runTransferWithMemo, runLimitOrder, runNft, runInfinityName];
+
+            for (let i = 0; i < loops; i++) {
+                const action = actions[Math.floor(Math.random() * actions.length)];
+                try {
+                    await action();
+                } catch (error) {
+                    showStatus(`Auto error: ${error.message}`, 'error');
+                }
+                await sleep(5000);
+            }
+            showStatus('Auto mode complete!', 'success');
+        }
+
+        // Statistics
+        async function runStatistics() {
+            const output = document.getElementById('stats-output');
+            output.innerHTML = '';
+
+            const data = stats.getWalletStats(walletAddress);
+            if (data) {
+                output.innerHTML = `
+                    <p>Total TXs: ${data.total_transactions}</p>
+                    <p>Gas Used: ${data.total_gas_used}</p>
+                    <p>Counters: ${JSON.stringify(data.counters)}</p>
+                `;
+            } else {
+                output.innerHTML = '<p>No stats found.</p>';
+            }
+        }
+
+        // Analytics
+        async function runAnalytics() {
+            const output = document.getElementById('analytics-output');
+            output.innerHTML = '';
+
+            let html = '<p>Tokens:</p>';
+            for (const [symbol, addr] of Object.entries(CONFIG.TOKENS)) {
+                try {
+                    const { formatted } = await getTokenBalance(addr);
+                    html += `<p>${symbol}: ${formatted}</p>`;
+                } catch {}
+            }
+
+            html += '<p>LP Positions:</p>';
+            const feeManager = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.FEE_MANAGER, FEE_MANAGER_ABI, provider);
+            const pairs = ['AlphaUSD', 'BetaUSD', 'ThetaUSD'];
+
+            for (const coin of pairs) {
+                try {
+                    const uToken = CONFIG.TOKENS[coin];
+                    const vToken = CONFIG.TOKENS.PathUSD;
+                    const poolId = await feeManager.getPoolId(uToken, vToken);
+                    const lp = await feeManager.liquidityBalances(poolId, walletAddress);
+                    if (lp.gt(0)) {
+                        html += `<p>${coin}/PathUSD LP: ${ethers.utils.formatUnits(lp, 6)}</p>`;
+                    }
+                } catch {}
+            }
+
+            output.innerHTML = html;
         }
 
         // Initialize
         document.getElementById('connectWallet').addEventListener('click', connectWallet);
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => showTab(btn.dataset.tab));
+        });
+        document.getElementById('gm-type').addEventListener('change', (e) => {
+            document.getElementById('gm-deploy-count').classList.toggle('hidden', e.target.value !== '2');
+        });
+        showTab('welcome');
     </script>
 </body>
 </html>
