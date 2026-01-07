@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tempo Bot - DeFi Automation Platform</title>
+    <script src="https://cdn.ethers.io/lib/ethers-5.7.2.umd.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 min-h-screen">
+    <!-- Header -->
+    <header class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center text-white font-bold">⚡</div>
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Tempo Bot</h1>
+                    <p class="text-sm text-gray-500">DeFi Automation Platform</p>
+                </div>
+            </div>
+            <button id="connectWallet" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all shadow-lg">
+                Connect Wallet
+            </button>
+            <div id="walletInfo" class="hidden bg-gray-100 px-4 py-2 rounded-lg">
+                <div class="text-xs text-gray-500">Connected</div>
+                <div class="font-mono text-sm" id="walletAddress"></div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div id="welcomeScreen" class="max-w-4xl mx-auto px-4 py-20 text-center">
+        <div class="text-purple-600 mb-6 text-8xl">👛</div>
+        <h2 class="text-4xl font-bold text-gray-800 mb-4">Connect Your Wallet</h2>
+        <p class="text-xl text-gray-600 mb-8">Get started with Tempo Bot by connecting your MetaMask wallet</p>
+        <button onclick="connectWallet()" class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:opacity-90 transition-all shadow-xl">
+            Connect Wallet
+        </button>
+    </div>
+
+    <div id="mainApp" class="hidden max-w-7xl mx-auto px-4 py-8">
+        <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            <!-- Sidebar -->
+            <div class="lg:col-span-1">
+                <div class="bg-white rounded-xl shadow-lg p-4 space-y-2">
+                    <button onclick="showTab('dashboard')" data-tab="dashboard" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>📊</span><span class="font-medium">Dashboard</span>
+                    </button>
+                    <button onclick="showTab('faucet')" data-tab="faucet" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>💧</span><span class="font-medium">Faucet</span>
+                    </button>
+                    <button onclick="showTab('send')" data-tab="send" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>📤</span><span class="font-medium">Send</span>
+                    </button>
+                    <button onclick="showTab('create')" data-tab="create" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🪙</span><span class="font-medium">Create Token</span>
+                    </button>
+                    <button onclick="showTab('swap')" data-tab="swap" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🔄</span><span class="font-medium">Swap</span>
+                    </button>
+                    <button onclick="showTab('liquidity')" data-tab="liquidity" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>💧</span><span class="font-medium">Liquidity</span>
+                    </button>
+                    <button onclick="showTab('limit')" data-tab="limit" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>📈</span><span class="font-medium">Limit Order</span>
+                    </button>
+                    <button onclick="showTab('domain')" data-tab="domain" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🌐</span><span class="font-medium">Domain</span>
+                    </button>
+                    <button onclick="showTab('nft')" data-tab="nft" class="tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100">
+                        <span>🖼️</span><span class="font-medium">NFT</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="lg:col-span-3">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <!-- Dashboard Tab -->
+                    <div id="tab-dashboard" class="tab-content">
+                        <div class="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl p-8 text-white mb-6">
+                            <h2 class="text-3xl font-bold mb-2">Welcome to Tempo Bot</h2>
+                            <p class="text-purple-100">Your all-in-one DeFi automation platform</p>
+                        </div>
+                        <div id="balancesGrid" class="grid grid-cols-2 md:grid-cols-4 gap-4"></div>
+                    </div>
+
+                    <!-- Faucet Tab -->
+                    <div id="tab-faucet" class="tab-content hidden">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Claim from Faucet</h3>
+                        <p class="text-gray-600 mb-6">Get test tokens for the Tempo testnet</p>
+                        <button onclick="claimFaucet()" class="w-full bg-gradient-to-r from-blue-500 to-cyan-500 text-white py-4 rounded-lg font-semibold hover:opacity-90 transition-all">
+                            💧 Claim Tokens
+                        </button>
+                    </div>
+
+                    <!-- Send Tab -->
+                    <div id="tab-send" class="tab-content hidden">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Send Tokens</h3>
+                        <div class="space-y-4">
+                            <select id="sendToken" class="w-full p-3 border rounded-lg">
+                                <option value="PathUSD">PathUSD</option>
+                                <option value="AlphaUSD">AlphaUSD</option>
+                                <option value="BetaUSD">BetaUSD</option>
+                                <option value="ThetaUSD">ThetaUSD</option>
+                            </select>
+                            <input type="text" id="sendRecipient" placeholder="Recipient Address" class="w-full p-3 border rounded-lg">
+                            <input type="number" id="sendAmount" placeholder="Amount" value="1" class="w-full p-3 border rounded-lg">
+                            <button onclick="sendToken()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">
+                                Send
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Create Token Tab -->
+                    <div id="tab-create" class="tab-content hidden">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Create Stablecoin</h3>
+                        <div class="space-y-4">
+                            <input type="text" id="tokenName" placeholder="Token Name (e.g., Alpha Dollar)" class="w-full p-3 border rounded-lg">
+                            <input type="text" id="tokenSymbol" placeholder="Symbol (e.g., AUSD)" class="w-full p-3 border rounded-lg">
+                            <button onclick="createToken()" class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700">
+                                Create Token
+                            </button>
+                            <div id="createdTokens" class="mt-6 space-y-2"></div>
+                        </div>
+                    </div>
+
+                    <!-- Swap Tab -->
+                    <div id="tab-swap" class="tab-content hidden">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Swap Tokens</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">From</label>
+                                <select id="swapTokenIn" class="w-full p-3 border rounded-lg">
+                                    <option value="PathUSD">PathUSD</option>
+                                    <option value="AlphaUSD">AlphaUSD</option>
+                                    <option value="BetaUSD">BetaUSD</option>
+                                    <option value="ThetaUSD">ThetaUSD</option>
+                                </select>
+                            </div>
+                            <div class="flex justify-center text-gray-400 text-2xl">⇅</div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">To</label>
+                                <select id="swapTokenOut" class="w-full p-3 border rounded-lg">
+                                    <option value="AlphaUSD">AlphaUSD</option>
+                                    <option value="PathUSD">PathUSD</option>
+                                    <option value="BetaUSD">BetaUSD</option>
+                                    <option value="ThetaUSD">ThetaUSD</option>
+                                </select>
+                            </div>
+                            <input type="number" id="swapAmount" placeholder="Amount" value="1" class="w-full p-3 border rounded-lg">
+                            <button onclick="swapTokens()" class="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700">
+                                Swap
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Liquidity Tab -->
+                    <div id="tab-liquidity" class="tab-content hidden">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Add Liquidity</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium mb-2">User Token</label>
+                                <select id="liqUserToken" class="w-full p-3 border rounded-lg">
+                                    <option value="0x20c0000000000000000000000000000000000001">AlphaUSD</option>
+                                    <option value="0x20c0000000000000000000000000000000000002">BetaUSD</option>
+                                    <option value="0x20c0000000000000000000000000000000000003">ThetaUSD</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium mb-2">Validator Token</label>
+                                <select id="liqValidatorToken" class="w-full p-3 border rounded-lg">
+                                    <option value="0x20c0000000000000000000000000000000000000">PathUSD</option>
+                                    <option value="0x20c0000000000000000000000000000000000001">AlphaUSD</option>
+                                </select>
+                            </div>
+                            <input type="number" id="liqAmount" placeholder="Amount" value="100" class="w-full p-3 border rounded-lg">
+                            <button onclick="addLiquidity()" class="w-full bg-indigo-600 text-white py-3 rounded-lg font-semibold hover:bg-indigo-700">
+                                Add Liquidity
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Limit Order Tab -->
+                    <div id="tab-limit" class="tab-content hidden">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Limit Order</h3>
+                        <div class="space-y-4">
+                            <select id="limitToken" class="w-full p-3 border rounded-lg">
+                                <option value="AlphaUSD">AlphaUSD</option>
+                                <option value="BetaUSD">BetaUSD</option>
+                                <option value="ThetaUSD">ThetaUSD</option>
+                            </select>
+                            <input type="number" id="limitAmount" placeholder="Amount" value="10" class="w-full p-3 border rounded-lg">
+                            <div class="flex gap-2">
+                                <button onclick="setOrderType(true)" id="bidBtn" class="flex-1 py-3 rounded-lg font-semibold bg-green-600 text-white">
+                                    BID (Buy)
+                                </button>
+                                <button onclick="setOrderType(false)" id="askBtn" class="flex-1 py-3 rounded-lg font-semibold bg-gray-200">
+                                    ASK (Sell)
+                                </button>
+                            </div>
+                            <button onclick="placeLimitOrder()" class="w-full bg-orange-600 text-white py-3 rounded-lg font-semibold hover:bg-orange-700">
+                                Place Order
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Domain Tab -->
+                    <div id="tab-domain" class="tab-content hidden">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Register Domain</h3>
+                        <p class="text-gray-600 mb-4">Register a .tempo domain name</p>
+                        <div class="space-y-4">
+                            <div class="flex gap-2">
+                                <input type="text" id="domainName" placeholder="Enter domain name" class="flex-1 p-3 border rounded-lg">
+                                <div class="flex items-center px-4 bg-gray-100 rounded-lg">.tempo</div>
+                            </div>
+                            <button onclick="registerDomain()" class="w-full bg-cyan-600 text-white py-3 rounded-lg font-semibold hover:bg-cyan-700">
+                                Register Domain
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- NFT Tab -->
+                    <div id="tab-nft" class="tab-content hidden">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Mint NFT</h3>
+                        <p class="text-gray-600 mb-4">Mint Retriever NFT on Tempo</p>
+                        <button onclick="mintNFT()" class="w-full bg-pink-600 text-white py-3 rounded-lg font-semibold hover:bg-pink-700">
+                            🖼️ Mint NFT
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Status Bar -->
+                <div id="statusBar" class="hidden mt-4 p-4 rounded-lg"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Configuration
+        const CONFIG = {
+            RPC_URL: 'https://rpc.testnet.tempo.xyz',
+            CHAIN_ID: 42429,
+            EXPLORER_URL: 'https://explore.tempo.xyz',
+            TOKENS: {
+                'PathUSD': '0x20c0000000000000000000000000000000000000',
+                'AlphaUSD': '0x20c0000000000000000000000000000000000001',
+                'BetaUSD': '0x20c0000000000000000000000000000000000002',
+                'ThetaUSD': '0x20c0000000000000000000000000000000000003'
+            },
+            SYSTEM_CONTRACTS: {
+                TIP20_FACTORY: '0x20fc000000000000000000000000000000000000',
+                FEE_MANAGER: '0xfeec000000000000000000000000000000000000',
+                STABLECOIN_DEX: '0xdec0000000000000000000000000000000000000'
+            },
+            INFINITY_NAME_CONTRACT: '0x70a57af45cd15f1565808cf7b1070bac363afd8a',
+            RETRIEVER_NFT_CONTRACT: '0x603928C91Db2A58E2E689D42686A139Ad41CB51C'
+        };
+
+        // ABIs
+        const ERC20_ABI = [
+            "function decimals() view returns (uint8)",
+            "function balanceOf(address owner) view returns (uint256)",
+            "function symbol() view returns (string)",
+            "function transfer(address to, uint256 amount) returns (bool)",
+            "function approve(address spender, uint256 amount) returns (bool)",
+            "function allowance(address owner, address spender) view returns (uint256)"
+        ];
+
+        const TIP20_FACTORY_ABI = [
+            "function createToken(string name, string symbol, string currency, address quoteToken, address admin) returns (address)",
+            "event TokenCreated(address indexed token, uint256 indexed tokenId, string name, string symbol, string currency, address quoteToken, address admin)"
+        ];
+
+        const STABLECOIN_DEX_ABI = [
+            "function swapExactAmountIn(address tokenIn, address tokenOut, uint128 amountIn, uint128 minAmountOut) returns (uint128 amountOut)",
+            "function quoteSwapExactAmountIn(address tokenIn, address tokenOut, uint128 amountIn) view returns (uint128 amountOut)",
+            "function place(address token, uint128 amount, bool isBid, int16 tick) returns (uint128 orderId)"
+        ];
+
+        const FEE_MANAGER_ABI = [
+            "function mintWithValidatorToken(address userToken, address validatorToken, uint256 amountValidatorToken, address to) returns (uint256 liquidity)"
+        ];
+
+        const INFINITY_NAME_ABI = [
+            "function register(string domain, address referrer) returns (uint256)"
+        ];
+
+        const RETRIEVER_NFT_ABI = [
+            "function claim(address receiver, uint256 quantity, address currency, uint256 pricePerToken, tuple(bytes32[] proof, uint256 quantityLimitPerWallet, uint256 pricePerToken, address currency) allowlistProof, bytes data)"
+        ];
+
+        // Global state
+        let provider, signer, account;
+        let orderType = true; // true = BID, false = ASK
+        let createdTokens = [];
+
+        // Connect Wallet
+        async function connectWallet() {
+            try {
+                if (!window.ethereum) {
+                    alert('Please install MetaMask!');
+                    return;
+                }
+
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                provider = new ethers.providers.Web3Provider(window.ethereum);
+                signer = provider.getSigner();
+                account = accounts[0];
+
+                // Switch to Tempo network
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: '0xa5bd' }],
+                    });
+                } catch (switchError) {
+                    if (switchError.code === 4902) {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [{
+                                chainId: '0xa5bd',
+                                chainName: 'Tempo Testnet',
+                                nativeCurrency: { name: 'TEMPO', symbol: 'TEMPO', decimals: 18 },
+                                rpcUrls: [CONFIG.RPC_URL],
+                                blockExplorerUrls: [CONFIG.EXPLORER_URL]
+                            }]
+                        });
+                    }
+                }
+
+                document.getElementById('connectWallet').classList.add('hidden');
+                document.getElementById('walletInfo').classList.remove('hidden');
+                document.getElementById('walletAddress').textContent = `${account.slice(0, 6)}...${account.slice(-4)}`;
+                document.getElementById('welcomeScreen').classList.add('hidden');
+                document.getElementById('mainApp').classList.remove('hidden');
+
+                showStatus('Wallet connected successfully!', 'success');
+                showTab('dashboard');
+                loadBalances();
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Load Balances
+        async function loadBalances() {
+            const grid = document.getElementById('balancesGrid');
+            grid.innerHTML = '';
+
+            for (const [symbol, address] of Object.entries(CONFIG.TOKENS)) {
+                try {
+                    const contract = new ethers.Contract(address, ERC20_ABI, provider);
+                    const balance = await contract.balanceOf(account);
+                    const decimals = await contract.decimals();
+                    const formatted = ethers.utils.formatUnits(balance, decimals);
+
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg p-4 shadow-md card-hover fade-in';
+                    card.innerHTML = `
+                        <div class="text-gray-500 text-sm">${symbol}</div>
+                        <div class="text-2xl font-bold text-gray-800">${parseFloat(formatted).toFixed(2)}</div>
+                    `;
+                    grid.appendChild(card);
+                } catch (error) {
+                    console.error(`Error loading ${symbol}:`, error);
+                }
+            }
+        }
+
+        // Claim Faucet
+        async function claimFaucet() {
+            showStatus('Claiming from faucet...', 'info');
+            try {
+                const txHashes = await provider.send('tempo_fundAddress', [account]);
+                showStatus(`Faucet claimed! TX: ${Array.isArray(txHashes) ? txHashes[0] : txHashes}`, 'success');
+                setTimeout(loadBalances, 3000);
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Send Token
+        async function sendToken() {
+            const tokenSymbol = document.getElementById('sendToken').value;
+            const recipient = document.getElementById('sendRecipient').value;
+            const amount = document.getElementById('sendAmount').value;
+
+            if (!recipient || !amount) {
+                showStatus('Please fill all fields', 'error');
+                return;
+            }
+
+            showStatus('Sending token...', 'info');
+            try {
+                const tokenAddress = CONFIG.TOKENS[tokenSymbol];
+                const contract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
+                const decimals = await contract.decimals();
+                const amountWei = ethers.utils.parseUnits(amount, decimals);
+
+                const tx = await contract.transfer(recipient, amountWei);
+                showStatus(`Transaction sent: ${tx.hash}`, 'info');
+                await tx.wait();
+                showStatus('Transfer successful!', 'success');
+                loadBalances();
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Create Token
+        async function createToken() {
+            const name = document.getElementById('tokenName').value;
+            const symbol = document.getElementById('tokenSymbol').value;
+
+            if (!name || !symbol) {
+                showStatus('Please fill all fields', 'error');
+                return;
+            }
+
+            showStatus('Creating token...', 'info');
+            try {
+                const factory = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.TIP20_FACTORY, TIP20_FACTORY_ABI, signer);
+                const tx = await factory.createToken(name, symbol, "USD", CONFIG.TOKENS.PathUSD, account);
+                showStatus(`Creation TX: ${tx.hash}`, 'info');
+                const receipt = await tx.wait();
+
+                for (const log of receipt.logs) {
+                    try {
+                        const parsed = factory.interface.parseLog(log);
+                        if (parsed && parsed.name === 'TokenCreated') {
+                            const tokenAddress = parsed.args.token;
+                            showStatus(`Token created at: ${tokenAddress}`, 'success');
+                            createdTokens.push({ address: tokenAddress, symbol, name });
+                            displayCreatedTokens();
+                            return;
+                        }
+                    } catch (e) { continue; }
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        function displayCreatedTokens() {
+            const container = document.getElementById('createdTokens');
+            if (createdTokens.length === 0) return;
+
+            container.innerHTML = '<h4 class="font-semibold text-gray-700">Your Tokens:</h4>';
+            createdTokens.forEach(token => {
+                const div = document.createElement('div');
+                div.className = 'bg-gray-50 p-3 rounded-lg fade-in';
+                div.innerHTML = `
+                    <div class="font-medium">${token.name} (${token.symbol})</div>
+                    <div class="text-sm text-gray-500">${token.address}</div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Swap Tokens
+        async function swapTokens() {
+            const tokenInSymbol = document.getElementById('swapTokenIn').value;
+            const tokenOutSymbol = document.getElementById('swapTokenOut').value;
+            const amount = document.getElementById('swapAmount').value;
+
+            if (tokenInSymbol === tokenOutSymbol) {
+                showStatus('Please select different tokens', 'error');
+                return;
+            }
+
+            showStatus('Swapping tokens...', 'info');
+            try {
+                const tokenIn = CONFIG.TOKENS[tokenInSymbol];
+                const tokenOut = CONFIG.TOKENS[tokenOutSymbol];
+                const dex = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX, STABLECOIN_DEX_ABI, signer);
+                const tokenInContract = new ethers.Contract(tokenIn, ERC20_ABI, signer);
+
+                const decimals = await tokenInContract.decimals();
+                const amountIn = ethers.utils.parseUnits(amount, decimals);
+
+                // Approve
+                const allowance = await tokenInContract.allowance(account, CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX);
+                if (allowance.lt(amountIn)) {
+                    showStatus('Approving token...', 'info');
+                    const approveTx = await tokenInContract.approve(CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX, ethers.constants.MaxUint256);
+                    await approveTx.wait();
+                }
+
+                // Get quote
+                const expectedOut = await dex.quoteSwapExactAmountIn(tokenIn, tokenOut, amountIn);
+                const minOut = expectedOut.mul(99).div(100);
+
+                showStatus('Executing swap...', 'info');
+                const tx = await dex.swapExactAmountIn(tokenIn, tokenOut, amountIn, minOut);
+                showStatus(`Swap TX: ${tx.hash}`, 'info');
+                await tx.wait();
+                showStatus('Swap successful!', 'success');
+                loadBalances();
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Add Liquidity
+        async function addLiquidity() {
+            const userToken = document.getElementById('liqUserToken').value;
+            const validatorToken = document.getElementById('liqValidatorToken').value;
+            const amount = document.getElementById('liqAmount').value;
+
+            showStatus('Adding liquidity...', 'info');
+            try {
+                const feeManager = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.FEE_MANAGER, FEE_MANAGER_ABI, signer);
+                const valContract = new ethers.Contract(validatorToken, ERC20_ABI, signer);
+
+                const decimals = await valContract.decimals();
+                const amountWei = ethers.utils.parseUnits(amount, decimals);
+
+                // Approve
+                const allowance = await valContract.allowance(account, CONFIG.SYSTEM_CONTRACTS.FEE_MANAGER);
+                if (allowance.lt(amountWei)) {
+                    showStatus('Approving token...', 'info');
+                    const approveTx = await valContract.approve(CONFIG.SYSTEM_CONTRACTS.FEE_MANAGER, ethers.constants.MaxUint256);
+                    await approveTx.wait();
+                }
+
+                showStatus('Minting liquidity...', 'info');
+                const tx = await feeManager.mintWithValidatorToken(userToken, validatorToken, amountWei, account);
+                showStatus(`TX: ${tx.hash}`, 'info');
+                await tx.wait();
+                showStatus('Liquidity added!', 'success');
+                loadBalances();
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Limit Order
+        function setOrderType(isBid) {
+            orderType = isBid;
+            const bidBtn = document.getElementById('bidBtn');
+            const askBtn = document.getElementById('askBtn');
+
+            if (isBid) {
+                bidBtn.className = 'flex-1 py-3 rounded-lg font-semibold bg-green-600 text-white';
+                askBtn.className = 'flex-1 py-3 rounded-lg font-semibold bg-gray-200';
+            } else {
+                bidBtn.className = 'flex-1 py-3 rounded-lg font-semibold bg-gray-200';
+                askBtn.className = 'flex-1 py-3 rounded-lg font-semibold bg-red-600 text-white';
+            }
+        }
+
+        async function placeLimitOrder() {
+            const tokenSymbol = document.getElementById('limitToken').value;
+            const amount = document.getElementById('limitAmount').value;
+
+            showStatus('Placing order...', 'info');
+            try {
+                const token = CONFIG.TOKENS[tokenSymbol];
+                const dex = new ethers.Contract(CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX, STABLECOIN_DEX_ABI, signer);
+
+                const tokenToApprove = orderType ? CONFIG.TOKENS.PathUSD : token;
+                const tokenContract = new ethers.Contract(tokenToApprove, ERC20_ABI, signer);
+
+                const amountWei = ethers.utils.parseUnits(amount, 6);
+
+                // Approve
+                const allowance = await tokenContract.allowance(account, CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX);
+                if (allowance.lt(amountWei)) {
+                    showStatus('Approving token...', 'info');
+                    const approveTx = await tokenContract.approve(CONFIG.SYSTEM_CONTRACTS.STABLECOIN_DEX, ethers.constants.MaxUint256);
+                    await approveTx.wait();
+                }
+
+                showStatus('Placing order...', 'info');
+                const tx = await dex.place(token, amountWei, orderType, 0, { gasLimit: 3000000 });
+                showStatus(`TX: ${tx.hash}`, 'info');
+                await tx.wait();
+                showStatus('Order placed!', 'success');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Register Domain
+        async function registerDomain() {
+            const domainName = document.getElementById('domainName').value.toLowerCase();
+
+            if (!domainName) {
+                showStatus('Please enter a domain name', 'error');
+                return;
+            }
+
+            showStatus('Registering domain...', 'info');
+            try {
+                const infinity = new ethers.Contract(CONFIG.INFINITY_NAME_CONTRACT, INFINITY_NAME_ABI, signer);
+                const pathUsd = new ethers.Contract(CONFIG.TOKENS.PathUSD, ERC20_ABI, signer);
+
+                const decimals = await pathUsd.decimals();
+                const amount = ethers.utils.parseUnits("1000", decimals);
+
+                // Approve
+                const allowance = await pathUsd.allowance(account, CONFIG.INFINITY_NAME_CONTRACT);
+                if (allowance.lt(amount)) {
+                    showStatus('Approving PathUSD...', 'info');
+                    const approveTx = await pathUsd.approve(CONFIG.INFINITY_NAME_CONTRACT, ethers.constants.MaxUint256);
+                    await approveTx.wait();
+                }
+
+                showStatus('Registering domain...', 'info');
+                const tx = await infinity.register(domainName, ethers.constants.AddressZero);
+                showStatus(`TX: ${tx.hash}`, 'info');
+                await tx.wait();
+                showStatus(`Domain ${domainName}.tempo registered!`, 'success');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Mint NFT
+        async function mintNFT() {
+            showStatus('Minting NFT...', 'info');
+            try {
+                const nft = new ethers.Contract(CONFIG.RETRIEVER_NFT_CONTRACT, RETRIEVER_NFT_ABI, signer);
+
+                const allowlistProof = {
+                    proof: [],
+                    quantityLimitPerWallet: ethers.constants.MaxUint256,
+                    pricePerToken: 0,
+                    currency: "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE"
+                };
+
+                const tx = await nft.claim(
+                    account,
+                    1,
+                    "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
+                    0,
+                    allowlistProof,
+                    "0x"
+                );
+                showStatus(`TX: ${tx.hash}`, 'info');
+                await tx.wait();
+                showStatus('NFT minted successfully!', 'success');
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        // Tab Navigation
+        function showTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all text-gray-700 hover:bg-gray-100';
+            });
+
+            const activeTab = document.getElementById(`tab-${tabName}`);
+            if (activeTab) {
+                activeTab.classList.remove('hidden');
+                activeTab.classList.add('fade-in');
+            }
+
+            const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+            if (activeBtn) {
+                activeBtn.className = 'tab-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md';
+            }
+        }
+
+        // Status Bar
+        function showStatus(message, type) {
+            const statusBar = document.getElementById('statusBar');
+            statusBar.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'bg-green-100', 'text-green-800', 'bg-blue-100', 'text-blue-800');
+
+            if (type === 'error') {
+                statusBar.classList.add('bg-red-100', 'text-red-800');
+            } else if (type === 'success') {
+                statusBar.classList.add('bg-green-100', 'text-green-800');
+            } else {
+                statusBar.classList.add('bg-blue-100', 'text-blue-800');
+            }
+
+            statusBar.textContent = message;
+            statusBar.classList.add('fade-in');
+        }
+
+        // Initialize
+        document.getElementById('connectWallet').addEventListener('click', connectWallet);
+    </script>
+</body>
+</html>
