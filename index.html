@@ -4,32 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tempo Testnet Console</title>
+
     <!-- Favicon / App Icon -->
     <link rel="icon" type="image/png" href="/icon.png">
     <link rel="apple-touch-icon" href="/icon.png">
     <meta name="theme-color" content="#764ba2">
     <meta name="description" content="A testnet-only console for manual onchain actions on Tempo: faucets, swaps, NFTs, and more. Connect your MetaMask wallet to explore.">
+
     <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .fade-in { animation: fadeIn 0.3s ease-in; }
-        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #d97706 100%); }
-        .card-hover { transition: all 0.3s ease; }
-        .card-hover:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-        }
-        .testnet-accent { color: #d97706; }
-    </style>
+    <link href="./dist/output.css" rel="stylesheet">
 </head>
+
 <body class="bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 min-h-screen">
+
     <!-- Header -->
     <header class="bg-white shadow-lg">
         <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+
             <!-- Logo -->
             <div class="flex items-center gap-3">
                 <img
@@ -46,18 +37,21 @@
                   TESTNET
                 </span>
             </div>
+
             <!-- Wallet -->
             <button
                 id="connectWallet"
                 class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-all shadow-lg">
                 Connect Wallet
             </button>
+
             <div id="walletInfo" class="hidden bg-gray-100 px-4 py-2 rounded-lg">
                 <div class="text-xs text-gray-500">Connected</div>
                 <div class="font-mono text-sm" id="walletAddress"></div>
             </div>
         </div>
     </header>
+
     <!-- Welcome Screen -->
     <div id="welcomeScreen" class="max-w-4xl mx-auto px-4 py-20 text-center">
         <div class="mb-6 flex justify-center">
@@ -68,7 +62,7 @@
             A unified dashboard to execute onchain actions on the Tempo testnet — faucets, swaps, NFTs, batch transfers, and more.
         </p>
         <button
-            id="enterButton"
+            onclick="TempoApp.connectWallet()"
             class="bg-gradient-to-r from-purple-600 to-pink-600 text-white px-8 py-4 rounded-xl font-semibold text-lg hover:opacity-90 transition-all shadow-xl">
             Enter Testnet Console
         </button>
@@ -77,26 +71,30 @@
             Testnet only • No real funds
         </p>
     </div>
+
     <!-- Main App -->
     <div id="mainApp" class="hidden max-w-7xl mx-auto px-4 py-8">
         <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+
             <!-- Sidebar -->
             <div class="lg:col-span-1">
                 <div id="sidebar" class="bg-white rounded-xl shadow-lg p-4 space-y-2">
                     <!-- Populated dynamically -->
                 </div>
             </div>
+
             <!-- Content -->
             <div class="lg:col-span-3">
                 <div class="bg-white rounded-xl shadow-lg p-6">
                     <div id="featureContent"></div>
                 </div>
+
                 <div id="statusBar" class="hidden mt-4 p-4 rounded-lg"></div>
             </div>
         </div>
     </div>
 
-    <!-- Only load the existing config.js -->
+    <!-- Core Scripts -->
     <script src="js/config.js"></script>
     <script src="js/app.js"></script>
     <script src="js/ui.js"></script>
@@ -119,91 +117,12 @@
     <script src="js/features/retriever-nft.js"></script>
     <script src="js/features/statistics.js"></script>
 
-    <!-- Minimal TempoApp Stub (replaces all missing scripts) -->
+    <!-- Init -->
     <script>
-        const TempoApp = {
-            provider: null,
-            signer: null,
-            address: null,
-
-            async connectWallet() {
-                if (!window.ethereum) {
-                    alert("Please install MetaMask!");
-                    return;
-                }
-
-                try {
-                    await window.ethereum.request({ method: 'eth_requestAccounts' });
-
-                    this.provider = new ethers.providers.Web3Provider(window.ethereum);
-                    this.signer = this.provider.getSigner();
-                    this.address = await this.signer.getAddress();
-
-                    // Update header UI
-                    document.getElementById('connectWallet').classList.add('hidden');
-                    document.getElementById('walletInfo').classList.remove('hidden');
-                    document.getElementById('walletAddress').textContent = 
-                        this.address.slice(0, 6) + '...' + this.address.slice(-4);
-
-                    // Add/switch to Tempo Testnet
-                    await this.addOrSwitchNetwork();
-
-                    // Show main app with basic status
-                    document.getElementById('welcomeScreen').classList.add('hidden');
-                    document.getElementById('mainApp').classList.remove('hidden');
-
-                    document.getElementById('statusBar').classList.remove('hidden');
-                    document.getElementById('statusBar').innerHTML = `
-                        <div class="bg-green-100 border border-green-300 text-green-800 p-4 rounded-lg">
-                            <strong>Successfully connected to Tempo Testnet!</strong><br>
-                            Address: <span class="font-mono">${this.address}</span><br>
-                            Chain ID: ${CONFIG.CHAIN_ID} | RPC: ${CONFIG.RPC_URL}
-                            <br><br>
-                            <em>Note: Full features (faucet, swap, etc.) are not yet available because core JS files are missing from the repo.</em>
-                        </div>`;
-                } catch (error) {
-                    console.error(error);
-                    alert("Connection failed: " + (error.message || error));
-                }
-            },
-
-            async addOrSwitchNetwork() {
-                try {
-                    await window.ethereum.request({
-                        method: 'wallet_switchEthereumChain',
-                        params: [{ chainId: '0x' + CONFIG.CHAIN_ID.toString(16) }],
-                    });
-                } catch (switchError) {
-                    if (switchError.code === 4902 || switchError.code === -32603) {
-                        await window.ethereum.request({
-                            method: 'wallet_addEthereumChain',
-                            params: [{
-                                chainId: '0x' + CONFIG.CHAIN_ID.toString(16),
-                                chainName: 'Tempo Testnet',
-                                rpcUrls: [CONFIG.RPC_URL],
-                                blockExplorerUrls: [CONFIG.EXPLORER_URL],
-                                nativeCurrency: {
-                                    name: 'Tempo',
-                                    symbol: 'TEMPO',
-                                    decimals: 18
-                                }
-                            }],
-                        });
-                    } else {
-                        throw switchError;
-                    }
-                }
-            },
-
-            init() {
-                document.getElementById('connectWallet').addEventListener('click', () => this.connectWallet());
-                document.getElementById('enterButton').addEventListener('click', () => this.connectWallet());
-            }
-        };
-
         document.addEventListener('DOMContentLoaded', () => {
             TempoApp.init();
         });
     </script>
+
 </body>
 </html>
