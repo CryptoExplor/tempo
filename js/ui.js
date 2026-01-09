@@ -1,8 +1,15 @@
 // UI Utilities
 const UI = {
-    showStatus(message, type) {
+    showStatus(message, type = 'info') {
         const statusBar = document.getElementById('statusBar');
-        statusBar.classList.remove('hidden', 'bg-red-100', 'text-red-800', 'bg-green-100', 'text-green-800', 'bg-blue-100', 'text-blue-800');
+        if (!statusBar) return;
+
+        statusBar.classList.remove(
+            'hidden',
+            'bg-red-100', 'text-red-800',
+            'bg-green-100', 'text-green-800',
+            'bg-blue-100', 'text-blue-800'
+        );
 
         if (type === 'error') {
             statusBar.classList.add('bg-red-100', 'text-red-800');
@@ -12,12 +19,14 @@ const UI = {
             statusBar.classList.add('bg-blue-100', 'text-blue-800');
         }
 
-        statusBar.textContent = message;
+        // ✅ FIX: render HTML instead of escaping it
+        statusBar.innerHTML = message.trim();
+
         statusBar.classList.add('fade-in');
 
-        // Auto-hide after 5 seconds
+        // Auto-hide after 5 seconds (only if message unchanged)
         setTimeout(() => {
-            if (statusBar.textContent === message) {
+            if (statusBar.innerHTML === message.trim()) {
                 statusBar.classList.add('hidden');
             }
         }, 5000);
@@ -33,17 +42,28 @@ const UI = {
     },
 
     createInput(id, placeholder, type = 'text', value = '') {
-        return `<input type="${type}" id="${id}" placeholder="${placeholder}" value="${value}" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">`;
+        return `
+            <input
+                type="${type}"
+                id="${id}"
+                placeholder="${placeholder}"
+                value="${value}"
+                class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+        `;
     },
 
     createSelect(id, options, label = '') {
-        const optionsHtml = options.map(opt => 
-            `<option value="${opt.value}">${opt.label}</option>`
-        ).join('');
-        
+        const optionsHtml = options
+            .map(opt => `<option value="${opt.value}">${opt.label}</option>`)
+            .join('');
+
         return `
             ${label ? `<label class="block text-sm font-medium mb-2">${label}</label>` : ''}
-            <select id="${id}" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+            <select
+                id="${id}"
+                class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
                 ${optionsHtml}
             </select>
         `;
@@ -51,12 +71,20 @@ const UI = {
 
     createButton(text, onclick, className = 'bg-blue-600 hover:bg-blue-700') {
         const id = 'btn_' + Math.random().toString(36).substr(2, 9);
+
         setTimeout(() => {
             const btn = document.getElementById(id);
             if (btn) btn.onclick = onclick;
         }, 0);
-        
-        return `<button id="${id}" class="${className} text-white py-3 px-6 rounded-lg font-semibold transition-all w-full">${text}</button>`;
+
+        return `
+            <button
+                id="${id}"
+                class="${className} text-white py-3 px-6 rounded-lg font-semibold transition-all w-full"
+            >
+                ${text}
+            </button>
+        `;
     },
 
     createTokenSelect(id, label = 'Select Token') {
@@ -87,14 +115,14 @@ const UI = {
 
     showLoading(elementId, message = 'Loading...') {
         const el = document.getElementById(elementId);
-        if (el) {
-            el.innerHTML = `
-                <div class="flex items-center justify-center py-8">
-                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mr-3"></div>
-                    <span class="text-gray-600">${message}</span>
-                </div>
-            `;
-        }
+        if (!el) return;
+
+        el.innerHTML = `
+            <div class="flex items-center justify-center py-8">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600 mr-3"></div>
+                <span class="text-gray-600">${message}</span>
+            </div>
+        `;
     },
 
     clearLoading(elementId) {
