@@ -1,91 +1,182 @@
-// TIP403 Policy Feature
+// TIP-403 Policy Management Feature (Enhanced)
+// This enhances the existing policy.js with token attachment
 FeatureRegistry.register({
     id: 'policy',
-    name: 'Transfer Policy',
+    name: 'Policy (TIP-403) ',
     icon: '🔐',
-    order: 11,
+    order: 20,
+    userTokens: [],
 
     render() {
         return `
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Transfer Policy (TIP403)</h3>
-            <p class="text-gray-600 mb-6">Create and manage transfer policies for your tokens</p>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Transfer Policy (TIP-403 Advanced)</h3>
+            <p class="text-gray-600 mb-6">Create and attach transfer policies to your tokens</p>
             
             <div class="space-y-6">
-                <!-- Create Policy -->
+                <!-- Load User Tokens -->
                 <div class="border-b pb-6">
-                    <h4 class="text-lg font-semibold mb-4">Create Policy</h4>
+                    <h4 class="text-lg font-semibold mb-4">Your Created Tokens</h4>
+                    <div id="policyUserTokensList" class="mb-4 space-y-2">
+                        <div class="text-sm text-gray-500">Click "Load My Tokens" to see tokens you can manage</div>
+                    </div>
+                    ${UI.createButton('Load My Tokens', () => this.loadUserTokens(), 'bg-blue-600 hover:bg-blue-700')}
+                </div>
+
+                <!-- Create & Attach Policy -->
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Create & Attach Policy</h4>
                     <div class="space-y-4">
-                        ${UI.createSelect('policyType', [
+                        <div id="policyTokenSelectContainer">
+                            <p class="text-sm text-gray-500">Load your tokens first</p>
+                        </div>
+
+                        ${UI.createSelect('policyTypeAdvanced', [
                             { value: '0', label: 'Open (No Restrictions)' },
                             { value: '1', label: 'Whitelist Only' },
                             { value: '2', label: 'Blacklist' }
                         ], 'Policy Type')}
-                        
-                        <div id="accountsInput" class="hidden">
-                            <label class="block text-sm font-medium mb-2">Accounts (comma-separated)</label>
-                            ${UI.createInput('policyAccounts', '0x123..., 0x456...')}
+
+                        <div>
+                            <label class="block text-sm font-medium mb-2">Addresses</label>
+                            <textarea id="policyAddresses" 
+                                placeholder="Enter addresses (one per line) or type 'random 5' for testing"
+                                rows="4"
+                                class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent font-mono text-sm"></textarea>
                         </div>
 
-                        <div class="flex items-center gap-3">
-                            <input type="checkbox" id="includeAccounts" class="w-4 h-4">
-                            <label for="includeAccounts" class="text-sm">Include initial accounts</label>
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <div class="text-sm font-medium text-blue-900 mb-2">📋 Policy Types</div>
+                            <ul class="text-sm text-blue-700 space-y-1">
+                                <li><strong>Open:</strong> No transfer restrictions</li>
+                                <li><strong>Whitelist:</strong> Only listed addresses can hold tokens</li>
+                                <li><strong>Blacklist:</strong> Listed addresses cannot hold tokens</li>
+                            </ul>
                         </div>
 
-                        ${UI.createButton('Create Policy', () => this.createPolicy(), 'bg-purple-600 hover:bg-purple-700')}
-                        
-                        <div id="policyResult" class="mt-4"></div>
+                        ${UI.createButton('Create & Attach Policy', () => this.createAndAttachPolicy(), 'bg-gradient-to-r from-purple-600 to-pink-600 hover:opacity-90')}
                     </div>
                 </div>
 
-                <!-- Modify Policy -->
-                <div class="border-b pb-6">
-                    <h4 class="text-lg font-semibold mb-4">Modify Policy</h4>
+                <!-- Check Current Policy -->
+                <div class="border-t pt-6">
+                    <h4 class="text-lg font-semibold mb-4">Check Current Policy</h4>
                     <div class="space-y-4">
-                        ${UI.createInput('modifyPolicyId', 'Policy ID', 'number')}
-                        ${UI.createAddressInput('modifyAccount', 'Account Address')}
+                        <div id="checkPolicyTokenContainer">
+                            <p class="text-sm text-gray-500">Load your tokens first</p>
+                        </div>
                         
-                        ${UI.createSelect('modifyAction', [
-                            { value: 'whitelist_add', label: 'Add to Whitelist' },
-                            { value: 'whitelist_remove', label: 'Remove from Whitelist' },
-                            { value: 'blacklist_add', label: 'Add to Blacklist' },
-                            { value: 'blacklist_remove', label: 'Remove from Blacklist' }
-                        ], 'Action')}
-
-                        ${UI.createButton('Modify Policy', () => this.modifyPolicy(), 'bg-blue-600 hover:bg-blue-700')}
+                        ${UI.createButton('Check Policy', () => this.checkTokenPolicy(), 'bg-green-600 hover:bg-green-700')}
+                        
+                        <div id="currentPolicyDisplay" class="hidden bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <div class="text-sm font-medium text-gray-700 mb-2">Current Policy</div>
+                            <div id="policyInfo" class="text-sm text-gray-600"></div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Check Authorization -->
-                <div>
-                    <h4 class="text-lg font-semibold mb-4">Check Authorization</h4>
-                    <div class="space-y-4">
-                        ${UI.createInput('checkPolicyId', 'Policy ID', 'number')}
-                        ${UI.createAddressInput('checkAccount', 'Account Address')}
-                        ${UI.createButton('Check', () => this.checkAuthorization(), 'bg-green-600 hover:bg-green-700')}
-                        <div id="authResult" class="mt-4"></div>
-                    </div>
+                <!-- Policy History -->
+                <div id="policyHistory" class="hidden border-t pt-6">
+                    <h4 class="text-lg font-semibold mb-3 text-gray-800">Policy Changes</h4>
+                    <div id="policyChangesList" class="space-y-2"></div>
                 </div>
             </div>
         `;
     },
 
-    init() {
-        const includeCheckbox = document.getElementById('includeAccounts');
-        const accountsDiv = document.getElementById('accountsInput');
+    async loadUserTokens() {
+        UI.showStatus('Scanning for your created tokens...', 'info');
         
-        if (includeCheckbox && accountsDiv) {
-            includeCheckbox.addEventListener('change', (e) => {
-                accountsDiv.classList.toggle('hidden', !e.target.checked);
-            });
+        try {
+            const factory = new ethers.Contract(
+                CONFIG.SYSTEM_CONTRACTS.TIP20_FACTORY,
+                TIP20_FACTORY_ABI,
+                TempoApp.provider
+            );
+
+            const filter = factory.filters.TokenCreated(null, null, null, null, null, TempoApp.account);
+            const events = await factory.queryFilter(filter);
+
+            this.userTokens = [];
+            const tokensList = document.getElementById('policyUserTokensList');
+            tokensList.innerHTML = '';
+
+            if (events.length === 0) {
+                tokensList.innerHTML = '<div class="text-sm text-yellow-600">No tokens found. Create a token first.</div>';
+                UI.showStatus('No tokens found for your address', 'warning');
+                return;
+            }
+
+            for (const event of events) {
+                const tokenAddress = event.args.token;
+                
+                try {
+                    const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, TempoApp.provider);
+                    const symbol = await tokenContract.symbol();
+                    
+                    this.userTokens.push({
+                        address: tokenAddress,
+                        symbol: symbol
+                    });
+
+                    const tokenDiv = document.createElement('div');
+                    tokenDiv.className = 'bg-gray-50 p-3 rounded-lg fade-in';
+                    tokenDiv.innerHTML = `
+                        <div class="font-medium text-gray-800">${symbol}</div>
+                        <div class="text-xs text-gray-500 break-all">${tokenAddress}</div>
+                    `;
+                    tokensList.appendChild(tokenDiv);
+                } catch (err) {
+                    console.error('Error loading token:', err);
+                }
+            }
+
+            // Update select dropdowns
+            const options = this.userTokens.map(token => ({
+                value: token.address,
+                label: token.symbol
+            }));
+            
+            document.getElementById('policyTokenSelectContainer').innerHTML = 
+                UI.createSelect('policyTokenAddress', options, 'Select Token');
+            
+            document.getElementById('checkPolicyTokenContainer').innerHTML = 
+                UI.createSelect('checkPolicyTokenAddress', options, 'Select Token');
+
+            UI.showStatus(`Found ${this.userTokens.length} token(s)`, 'success');
+        } catch (error) {
+            UI.showStatus(`Error: ${error.message}`, 'error');
         }
     },
 
-    async createPolicy() {
-        const policyType = UI.getInputValue('policyType');
-        const includeAccounts = document.getElementById('includeAccounts').checked;
+    async createAndAttachPolicy() {
+        if (this.userTokens.length === 0) {
+            UI.showStatus('Please load your tokens first', 'error');
+            return;
+        }
+
+        const tokenAddress = UI.getInputValue('policyTokenAddress');
+        const policyType = UI.getInputValue('policyTypeAdvanced');
+        const addressesInput = document.getElementById('policyAddresses').value.trim();
+
+        let addresses = [];
         
+        if (addressesInput.toLowerCase().startsWith('random')) {
+            const count = parseInt(addressesInput.split(' ')[1]) || 5;
+            addresses = Array(count).fill(0).map(() => ethers.Wallet.createRandom().address);
+            UI.showStatus(`Generated ${count} random addresses`, 'info');
+        } else {
+            addresses = addressesInput.split('\n')
+                .map(a => a.trim())
+                .filter(a => a && ethers.utils.isAddress(a));
+        }
+
+        if (addresses.length === 0 && policyType !== '0') {
+            UI.showStatus('Please enter at least one address for whitelist/blacklist', 'error');
+            return;
+        }
+
         UI.showStatus('Creating policy...', 'info');
-        
+
         try {
             const registry = new ethers.Contract(
                 CONFIG.TIP403_REGISTRY,
@@ -93,26 +184,22 @@ FeatureRegistry.register({
                 TempoApp.signer
             );
 
+            // Create policy
             let tx;
-            
-            if (includeAccounts) {
-                const accountsStr = UI.getInputValue('policyAccounts');
-                const accounts = accountsStr.split(',').map(a => a.trim()).filter(a => a);
-                
-                if (accounts.length === 0) {
-                    UI.showStatus('Please enter at least one account', 'error');
-                    return;
-                }
-
-                tx = await registry.createPolicyWithAccounts(TempoApp.account, policyType, accounts);
+            if (addresses.length > 0) {
+                tx = await registry.createPolicyWithAccounts(
+                    TempoApp.account,
+                    policyType,
+                    addresses
+                );
             } else {
                 tx = await registry.createPolicy(TempoApp.account, policyType);
             }
 
-            UI.showStatus(`Transaction sent: ${tx.hash}`, 'info');
+            UI.showStatus(`Policy creation TX: ${tx.hash}`, 'info');
             const receipt = await tx.wait();
 
-            // Parse PolicyCreated event
+            // Extract policy ID from events
             let policyId = null;
             for (const log of receipt.logs) {
                 try {
@@ -124,91 +211,141 @@ FeatureRegistry.register({
                 } catch (e) { continue; }
             }
 
-            const resultDiv = document.getElementById('policyResult');
-            if (policyId) {
-                resultDiv.innerHTML = `
-                    <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-                        <div class="text-sm text-green-700 font-medium mb-1">Policy Created!</div>
-                        <div class="text-2xl font-bold text-green-900">Policy ID: ${policyId}</div>
-                    </div>
-                `;
-                UI.showStatus(`Policy created with ID: ${policyId}`, 'success');
-            } else {
-                UI.showStatus('Policy created successfully!', 'success');
+            // Fallback: try to extract from raw logs
+            if (!policyId && receipt.logs.length > 0) {
+                try {
+                    // PolicyId is typically in the first indexed parameter
+                    const log = receipt.logs[0];
+                    if (log.topics.length > 1) {
+                        policyId = ethers.BigNumber.from(log.topics[1]).toString();
+                    }
+                } catch (e) {
+                    console.error('Failed to extract policy ID:', e);
+                }
             }
-        } catch (error) {
-            UI.showStatus(`Error: ${error.message}`, 'error');
-        }
-    },
 
-    async modifyPolicy() {
-        const policyId = UI.getInputValue('modifyPolicyId');
-        const account = UI.getInputValue('modifyAccount');
-        const action = UI.getInputValue('modifyAction');
+            if (!policyId) {
+                UI.showStatus('Policy created but could not extract ID. Check transaction.', 'warning');
+                return;
+            }
 
-        if (!policyId || !account || !ethers.utils.isAddress(account)) {
-            UI.showStatus('Please fill all fields with valid data', 'error');
-            return;
-        }
+            UI.showStatus(`Policy created with ID: ${policyId}`, 'success');
 
-        UI.showStatus('Modifying policy...', 'info');
-
-        try {
-            const registry = new ethers.Contract(
-                CONFIG.TIP403_REGISTRY,
-                TIP403_REGISTRY_ABI,
+            // Attach policy to token
+            UI.showStatus('Attaching policy to token...', 'info');
+            
+            const tokenContract = new ethers.Contract(
+                tokenAddress,
+                TIP20_POLICY_ABI,
                 TempoApp.signer
             );
 
-            let tx;
-            const [listType, actionType] = action.split('_');
-            const allowed = actionType === 'add';
+            const attachTx = await tokenContract.changeTransferPolicyId(policyId);
+            await attachTx.wait();
 
-            if (listType === 'whitelist') {
-                tx = await registry.modifyPolicyWhitelist(policyId, account, allowed);
+            const token = this.userTokens.find(t => t.address === tokenAddress);
+            this.addToPolicyHistory(token.symbol, policyType, policyId, addresses.length);
+
+            UI.showStatus(`Policy ${policyId} attached to token successfully! 🎉`, 'success');
+
+            // Clear inputs
+            document.getElementById('policyAddresses').value = '';
+
+        } catch (error) {
+            if (error.message.includes('AccessControl')) {
+                UI.showStatus('Access denied. You must be the token admin.', 'error');
             } else {
-                tx = await registry.modifyPolicyBlacklist(policyId, account, !allowed);
+                UI.showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+    },
+
+    async checkTokenPolicy() {
+        if (this.userTokens.length === 0) {
+            UI.showStatus('Please load your tokens first', 'error');
+            return;
+        }
+
+        const tokenAddress = UI.getInputValue('checkPolicyTokenAddress');
+        const token = this.userTokens.find(t => t.address === tokenAddress);
+
+        UI.showStatus('Checking policy...', 'info');
+
+        try {
+            const tokenContract = new ethers.Contract(
+                tokenAddress,
+                TIP20_POLICY_ABI,
+                TempoApp.provider
+            );
+
+            const policyId = await tokenContract.transferPolicyId();
+
+            const displayDiv = document.getElementById('currentPolicyDisplay');
+            const infoDiv = document.getElementById('policyInfo');
+
+            displayDiv.classList.remove('hidden');
+
+            if (policyId.eq(0)) {
+                infoDiv.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <div class="text-2xl">🔓</div>
+                        <div>
+                            <div class="font-semibold">No Policy Set</div>
+                            <div class="text-xs">Token has no transfer restrictions</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                infoDiv.innerHTML = `
+                    <div class="flex items-center gap-2">
+                        <div class="text-2xl">🔐</div>
+                        <div>
+                            <div class="font-semibold">Policy ID: ${policyId.toString()}</div>
+                            <div class="text-xs">Transfer policy is active</div>
+                        </div>
+                    </div>
+                `;
             }
 
-            UI.showStatus(`Transaction sent: ${tx.hash}`, 'info');
-            await tx.wait();
-            UI.showStatus('Policy modified successfully!', 'success');
+            UI.showStatus('Policy information loaded', 'success');
+
         } catch (error) {
             UI.showStatus(`Error: ${error.message}`, 'error');
         }
     },
 
-    async checkAuthorization() {
-        const policyId = UI.getInputValue('checkPolicyId');
-        const account = UI.getInputValue('checkAccount');
+    addToPolicyHistory(tokenSymbol, policyType, policyId, addressCount) {
+        const historyDiv = document.getElementById('policyHistory');
+        const changesList = document.getElementById('policyChangesList');
+        
+        historyDiv.classList.remove('hidden');
 
-        if (!policyId || !account || !ethers.utils.isAddress(account)) {
-            UI.showStatus('Please fill all fields with valid data', 'error');
-            return;
-        }
+        const policyTypes = ['Open', 'Whitelist', 'Blacklist'];
+        const policyName = policyTypes[parseInt(policyType)] || 'Unknown';
 
-        UI.showStatus('Checking authorization...', 'info');
-
-        try {
-            const registry = new ethers.Contract(
-                CONFIG.TIP403_REGISTRY,
-                TIP403_REGISTRY_ABI,
-                TempoApp.provider
-            );
-
-            const isAuthorized = await registry.isAuthorized(policyId, account);
-
-            const resultDiv = document.getElementById('authResult');
-            resultDiv.innerHTML = `
-                <div class="bg-${isAuthorized ? 'green' : 'red'}-50 border border-${isAuthorized ? 'green' : 'red'}-200 rounded-lg p-4">
-                    <div class="text-sm text-${isAuthorized ? 'green' : 'red'}-700 font-medium">
-                        ${isAuthorized ? '✅ Authorized' : '❌ Not Authorized'}
+        const changeDiv = document.createElement('div');
+        changeDiv.className = 'bg-blue-50 border border-blue-200 rounded-lg p-3 fade-in';
+        changeDiv.innerHTML = `
+            <div class="flex items-center justify-between">
+                <div>
+                    <div class="text-sm font-medium text-blue-800">
+                        ${tokenSymbol}: ${policyName} Policy Applied
+                    </div>
+                    <div class="text-xs text-blue-600">
+                        Policy ID: ${policyId} • ${addressCount} address${addressCount !== 1 ? 'es' : ''}
                     </div>
                 </div>
-            `;
-            UI.showStatus('Check complete', 'success');
-        } catch (error) {
-            UI.showStatus(`Error: ${error.message}`, 'error');
+                <div class="text-2xl">
+                    ${policyType === '0' ? '🔓' : policyType === '1' ? '✅' : '🚫'}
+                </div>
+            </div>
+        `;
+        
+        changesList.insertBefore(changeDiv, changesList.firstChild);
+
+        // Keep only last 5 changes
+        while (changesList.children.length > 5) {
+            changesList.removeChild(changesList.lastChild);
         }
     }
 });
