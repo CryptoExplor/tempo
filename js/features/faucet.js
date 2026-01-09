@@ -1,65 +1,4 @@
 // ======================
-// UI HELPERS
-// ======================
-const UI = {
-    showStatus(message, type = 'info') {
-        const el = document.getElementById('status');
-        if (!el) return;
-
-        const baseClass = 'rounded-lg p-4 mt-4 text-sm leading-relaxed';
-
-        const typeClass = {
-            success: 'bg-green-100 text-green-800 border border-green-300',
-            error: 'bg-red-100 text-red-800 border border-red-300',
-            warning: 'bg-yellow-100 text-yellow-800 border border-yellow-300',
-            info: 'bg-blue-100 text-blue-800 border border-blue-300'
-        }[type] || '';
-
-        el.className = `${baseClass} ${typeClass}`;
-        el.innerHTML = message; // HTML rendering enabled
-    },
-
-    showLoading(id, text = 'Loading...') {
-        const el = document.getElementById(id);
-        if (!el) return;
-
-        el.innerHTML = `
-            <div class="flex items-center gap-2 text-gray-500 text-sm">
-                <span class="animate-spin">⏳</span>
-                <span>${text}</span>
-            </div>
-        `;
-    },
-
-    createButton(label, onClick, className = '') {
-        const id = `btn-${Math.random().toString(36).slice(2)}`;
-        setTimeout(() => {
-            const btn = document.getElementById(id);
-            if (btn) btn.onclick = onClick;
-        }, 0);
-
-        return `
-            <button
-                id="${id}"
-                class="px-4 py-2 rounded-lg font-semibold transition-all ${className}"
-            >
-                ${label}
-            </button>
-        `;
-    },
-
-    createCard(title, value) {
-        return `
-            <div class="bg-white rounded-xl p-4 border border-gray-200">
-                <div class="text-sm text-gray-500 mb-1">${title}</div>
-                <div class="text-xl font-bold text-gray-900">${value}</div>
-            </div>
-        `;
-    }
-};
-
-
-// ======================
 // FAUCET FEATURE
 // ======================
 FeatureRegistry.register({
@@ -155,3 +94,4 @@ FeatureRegistry.register({
         }
     }
 });
+
