@@ -8,10 +8,27 @@ const TempoApp = {
     init() {
         this.setupEventListeners();
         FeatureRegistry.renderSidebar();
+        this.showNetworkInfo();
     },
 
     setupEventListeners() {
         document.getElementById('connectWallet').addEventListener('click', () => this.connectWallet());
+    },
+
+    showNetworkInfo() {
+        // Show migration notice if on old testnet
+        const networkBanner = document.createElement('div');
+        networkBanner.id = 'networkBanner';
+        networkBanner.className = 'bg-blue-600 text-white py-3 px-4 text-center text-sm';
+        networkBanner.innerHTML = `
+            <div class="max-w-7xl mx-auto flex items-center justify-center gap-2">
+                <span>🚀</span>
+                <span><strong>Moderato Testnet</strong> (Chain ID: ${CONFIG.CHAIN_ID}) • Launched ${CONFIG.LAUNCH_DATE}</span>
+                <span>•</span>
+                <a href="https://github.com/CryptoExplor/tempo#network-upgrades" target="_blank" class="underline hover:text-blue-200">Migration Guide</a>
+            </div>
+        `;
+        document.body.insertBefore(networkBanner, document.body.firstChild);
     },
 
     async connectWallet() {
@@ -26,25 +43,81 @@ const TempoApp = {
             this.signer = this.provider.getSigner();
             this.account = accounts[0];
 
-            // Switch to Tempo network
-            try {
-                await window.ethereum.request({
-                    method: 'wallet_switchEthereumChain',
-                    params: [{ chainId: '0xa5bd' }],
-                });
-            } catch (switchError) {
-                if (switchError.code === 4902) {
+            // Check if user is on the correct network
+            const network = await this.provider.getNetwork();
+            
+            if (network.chainId !== CONFIG.CHAIN_ID) {
+                UI.showStatus('Switching to Moderato testnet...', 'info');
+                
+                // Try to switch to Moderato
+                try {
                     await window.ethereum.request({
-                        method: 'wallet_addEthereumChain',
-                        params: [{
-                            chainId: '0xa5bd',
-                            chainName: 'Tempo Testnet',
-                            nativeCurrency: { name: 'TEMPO', symbol: 'TEMPO', decimals: 18 },
-                            rpcUrls: [CONFIG.RPC_URL],
-                            blockExplorerUrls: [CONFIG.EXPLORER_URL]
-                        }]
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: CONFIG.CHAIN_ID_HEX }],
                     });
+                } catch (switchError) {
+                    // If network doesn't exist, add it
+                    if (switchError.code === 4902) {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [{
+                                chainId: CONFIG.CHAIN_ID_HEX,
+                                chainName: CONFIG.NETWORK_NAME,
+                                nativeCurrency: { 
+                                    name: 'USD', 
+                                    symbol: 'USD', 
+                                    decimals: 18 
+                                },
+                                rpcUrls: [CONFIG.RPC_URL],
+                                blockExplorerUrls: [CONFIG.EXPLORER_URL]
+                            }]
+                        });
+                    } else {
+                        throw switchError;
+                    }
                 }
+                
+                // Refresh provider after network switch
+                this.provider = new ethers.providers.Web3Provider(window.ethereum);
+                this.signer = this.provider.getSigner();
+            }
+
+            // Check if user might be on legacy Andantino
+            if (network.chainId === CONFIG.LEGACY.CHAIN_ID) {
+                UI.showStatus('⚠️ You are on the deprecated Andantino testnet. Please switch to Moderato!', 'error');
+                
+                const migrationNotice = document.createElement('div');
+                migrationNotice.className = 'fixed top-20 left-1/2 transform -translate-x-1/2 bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6 shadow-2xl z-50 max-w-2xl';
+                migrationNotice.innerHTML = `
+                    <div class="flex items-start gap-4">
+                        <div class="text-4xl">⚠️</div>
+                        <div class="flex-1">
+                            <h3 class="text-xl font-bold text-yellow-900 mb-2">Network Migration Required</h3>
+                            <p class="text-yellow-800 mb-3">
+                                You're connected to <strong>Andantino</strong> (deprecated March 8, 2025).
+                                Please switch to the new <strong>Moderato testnet</strong>.
+                            </p>
+                            <button id="switchToModerato" class="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">
+                                Switch to Moderato
+                            </button>
+                            <button id="dismissMigration" class="ml-2 text-yellow-700 hover:text-yellow-900 px-4 py-2">
+                                Dismiss
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(migrationNotice);
+
+                document.getElementById('switchToModerato').onclick = async () => {
+                    migrationNotice.remove();
+                    await this.connectWallet();
+                };
+                
+                document.getElementById('dismissMigration').onclick = () => {
+                    migrationNotice.remove();
+                };
+
+                return;
             }
 
             document.getElementById('connectWallet').classList.add('hidden');
@@ -53,7 +126,7 @@ const TempoApp = {
             document.getElementById('welcomeScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
 
-            UI.showStatus('Wallet connected successfully!', 'success');
+            UI.showStatus('Wallet connected to Moderato testnet!', 'success');
             FeatureRegistry.showFeature('dashboard');
         } catch (error) {
             UI.showStatus(`Error: ${error.message}`, 'error');
