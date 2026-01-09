@@ -1,27 +1,40 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "index.html",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "js/**/*.js",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "icon.png",
-      "use": "@vercel/static"
-    }
-  ],
   "routes": [
     {
-      "src": "/js/(.*)",
-      "dest": "/js/$1"
+      "src": "/js/config.js",
+      "dest": "/js/config.js",
+      "headers": {
+        "Content-Type": "application/javascript"
+      }
+    },
+    {
+      "src": "/js/app.js",
+      "dest": "/js/app.js",
+      "headers": {
+        "Content-Type": "application/javascript"
+      }
+    },
+    {
+      "src": "/js/ui.js",
+      "dest": "/js/ui.js",
+      "headers": {
+        "Content-Type": "application/javascript"
+      }
+    },
+    {
+      "src": "/js/features/(.*).js",
+      "dest": "/js/features/$1.js",
+      "headers": {
+        "Content-Type": "application/javascript"
+      }
     },
     {
       "src": "/icon.png",
-      "dest": "/icon.png"
+      "dest": "/icon.png",
+      "headers": {
+        "Content-Type": "image/png"
+      }
     },
     {
       "src": "/(.*)",
@@ -29,6 +42,19 @@
     }
   ],
   "headers": [
+    {
+      "source": "/js/(.*).js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
     {
       "source": "/(.*)",
       "headers": [
@@ -45,15 +71,12 @@
           "value": "1; mode=block"
         }
       ]
-    },
+    }
+  ],
+  "rewrites": [
     {
-      "source": "/js/(.*)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=31536000, immutable"
-        }
-      ]
+      "source": "/js/:path*",
+      "destination": "/js/:path*"
     }
   ]
 }
