@@ -5,7 +5,7 @@ FeatureRegistry.register({
     id: 'domain',
     name: 'Domain',
     icon: '🌐',
-    order: 8,
+    order: 16,
 
     render() {
         return `

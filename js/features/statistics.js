@@ -9,7 +9,7 @@ FeatureRegistry.register({
 
     render() {
         return `
-            <h3 class="text-2xl font-bold text-gray-800 mb-4">Advanced Wallet Statistics</h3>
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">Tempo Testnet Statistics</h3>
             <p class="text-gray-600 mb-6">Comprehensive transaction history and analytics</p>
             
             <div class="space-y-6">

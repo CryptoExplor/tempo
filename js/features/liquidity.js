@@ -5,7 +5,7 @@ FeatureRegistry.register({
     id: 'liquidity',
     name: 'Liquidity',
     icon: '💧',
-    order: 6,
+    order: 13,
 
     render() {
         return `

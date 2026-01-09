@@ -3,7 +3,7 @@ FeatureRegistry.register({
     id: 'batch-transfer',
     name: 'Batch Transfer',
     icon: '📦',
-    order: 12,
+    order: 4,
 
     render() {
         return `

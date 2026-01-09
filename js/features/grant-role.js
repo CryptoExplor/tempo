@@ -3,7 +3,7 @@ FeatureRegistry.register({
     id: 'grant-role',
     name: 'Grant Role',
     icon: '🔑',
-    order: 14,
+    order: 10,
     userTokens: [],
 
     render() {

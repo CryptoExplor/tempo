@@ -3,7 +3,7 @@ FeatureRegistry.register({
     id: 'mint-tokens',
     name: 'Mint Tokens',
     icon: '🏭',
-    order: 17,
+    order: 8,
     userTokens: [],
 
     render() {

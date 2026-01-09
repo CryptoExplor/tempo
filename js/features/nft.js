@@ -5,7 +5,7 @@ FeatureRegistry.register({
     id: 'nft',
     name: 'NFT',
     icon: '🖼️',
-    order: 9,
+    order: 17,
 
     render() {
         return `

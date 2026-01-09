@@ -5,7 +5,7 @@ FeatureRegistry.register({
     id: 'create',
     name: 'Create Token',
     icon: '🪙',
-    order: 4,
+    order: 7,
     createdTokens: [],
 
     render() {

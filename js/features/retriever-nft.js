@@ -3,7 +3,7 @@ FeatureRegistry.register({
     id: 'retriever-nft',
     name: 'Retriever NFT',
     icon: '🐕',
-    order: 15,
+    order: 18,
 
     render() {
         return `

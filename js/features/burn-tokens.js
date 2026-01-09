@@ -3,7 +3,7 @@ FeatureRegistry.register({
     id: 'burn-tokens',
     name: 'Burn Tokens',
     icon: '🔥',
-    order: 18,
+    order: 9,
     userTokens: [],
 
     render() {

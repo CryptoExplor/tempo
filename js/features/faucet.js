@@ -5,7 +5,7 @@ FeatureRegistry.register({
     id: 'faucet',
     name: 'Faucet',
     icon: '💧',
-    order: 2,
+    order: 6,
 
     render() {
         return `

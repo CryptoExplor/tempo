@@ -3,7 +3,7 @@ FeatureRegistry.register({
     id: 'deploy-contract',
     name: 'Deploy Contract',
     icon: '🚀',
-    order: 20,
+    order: 15,
 
     render() {
         return `

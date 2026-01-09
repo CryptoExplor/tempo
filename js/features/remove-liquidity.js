@@ -3,7 +3,7 @@ FeatureRegistry.register({
     id: 'remove-liquidity',
     name: 'Remove Liquidity',
     icon: '💸',
-    order: 13,
+    order: 14,
 
     render() {
         return `

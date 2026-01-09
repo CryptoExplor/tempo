@@ -5,7 +5,7 @@ FeatureRegistry.register({
     id: 'limit',
     name: 'Limit Order',
     icon: '📈',
-    order: 7,
+    order: 12,
     orderType: true,
 
     render() {

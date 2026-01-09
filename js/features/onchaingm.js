@@ -3,7 +3,7 @@ FeatureRegistry.register({
     id: 'onchaingm',
     name: 'OnChain GM',
     icon: '👋',
-    order: 10,
+    order: 19,
 
     render() {
         return `

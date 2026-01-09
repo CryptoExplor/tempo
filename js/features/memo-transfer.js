@@ -3,7 +3,7 @@ FeatureRegistry.register({
     id: 'memo-transfer',
     name: 'Memo Transfer',
     icon: '📝',
-    order: 19,
+    order: 5,
 
     render() {
         return `
