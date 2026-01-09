@@ -1,52 +1,29 @@
-// Configuration - Updated for Moderato Testnet (Jan 8, 2025)
+// Configuration
 const CONFIG = {
-    // ===== MODERATO TESTNET (NEW) =====
-    RPC_URL: 'https://rpc.moderato.tempo.xyz',
-    CHAIN_ID: 42431,
-    CHAIN_ID_HEX: '0xa5bf',
+    RPC_URL: 'https://rpc.testnet.tempo.xyz',
+    CHAIN_ID: 42429,
     EXPLORER_URL: 'https://explore.tempo.xyz',
-    
-    // System Token Addresses (verify these on Moderato)
     TOKENS: {
         'PathUSD': '0x20c0000000000000000000000000000000000000',
         'AlphaUSD': '0x20c0000000000000000000000000000000000001',
         'BetaUSD': '0x20c0000000000000000000000000000000000002',
         'ThetaUSD': '0x20c0000000000000000000000000000000000003'
     },
-    
-    // System Contracts (verify these on Moderato)
     SYSTEM_CONTRACTS: {
         TIP20_FACTORY: '0x20fc000000000000000000000000000000000000',
         FEE_MANAGER: '0xfeec000000000000000000000000000000000000',
         STABLECOIN_DEX: '0xdec0000000000000000000000000000000000000'
     },
-    
-    // Other Contracts (these will need to be verified/redeployed on Moderato)
     INFINITY_NAME_CONTRACT: '0x70a57af45cd15f1565808cf7b1070bac363afd8a',
     RETRIEVER_NFT_CONTRACT: '0x603928C91Db2A58E2E689D42686A139Ad41CB51C',
     ONCHAINGM_CONTRACT: '0x2d91014C9Ab33821C4Fa15806c63D2C053cdD10c',
     ONCHAINGM_DEPLOY_CONTRACT: '0xa89E3e260C85d19c0b940245FDdb1e845C93dED8',
     ONCHAINGM_FEE: '15000000',
     ONCHAINGM_DEPLOY_FEE: '20000000',
-    TIP403_REGISTRY: '0x403c000000000000000000000000000000000000',
-    
-    // Network Info
-    NETWORK_NAME: 'Tempo Moderato Testnet',
-    NETWORK_VERSION: 'v1.0.0-rc.1',
-    LAUNCH_DATE: 'January 8, 2025',
-    DEPRECATION_DATE: 'N/A (Current testnet)',
-    
-    // Legacy Andantino (deprecated March 8, 2025)
-    LEGACY: {
-        RPC_URL: 'https://rpc.testnet.tempo.xyz',
-        CHAIN_ID: 42429,
-        CHAIN_ID_HEX: '0xa5bd',
-        DEPRECATION_DATE: 'March 8, 2025',
-        WARNING: 'Andantino testnet is deprecated. Please use Moderato.'
-    }
+    TIP403_REGISTRY: '0x403c000000000000000000000000000000000000'
 };
 
-// ABIs (unchanged)
+// ABIs
 const ERC20_ABI = [
     "function decimals() view returns (uint8)",
     "function balanceOf(address owner) view returns (uint256)",
