@@ -56,22 +56,30 @@ const TempoApp = {
                         params: [{ chainId: CONFIG.CHAIN_ID_HEX }],
                     });
                 } catch (switchError) {
-                    // If network doesn't exist, add it
-                    if (switchError.code === 4902) {
-                        await window.ethereum.request({
-                            method: 'wallet_addEthereumChain',
-                            params: [{
-                                chainId: CONFIG.CHAIN_ID_HEX,
-                                chainName: CONFIG.NETWORK_NAME,
-                                nativeCurrency: { 
-                                    name: 'USD', 
-                                    symbol: 'USD', 
-                                    decimals: 18 
-                                },
-                                rpcUrls: [CONFIG.RPC_URL],
-                                blockExplorerUrls: [CONFIG.EXPLORER_URL]
-                            }]
-                        });
+                    // If network doesn't exist, add it automatically
+                    if (switchError.code === 4902 || switchError.code === -32603) {
+                        UI.showStatus('Adding Moderato testnet to your wallet...', 'info');
+                        
+                        try {
+                            await window.ethereum.request({
+                                method: 'wallet_addEthereumChain',
+                                params: [{
+                                    chainId: CONFIG.CHAIN_ID_HEX,
+                                    chainName: CONFIG.NETWORK_NAME,
+                                    nativeCurrency: { 
+                                        name: 'USD', 
+                                        symbol: 'USD', 
+                                        decimals: 18 
+                                    },
+                                    rpcUrls: [CONFIG.RPC_URL],
+                                    blockExplorerUrls: [CONFIG.EXPLORER_URL]
+                                }]
+                            });
+                            UI.showStatus('Moderato testnet added successfully!', 'success');
+                        } catch (addError) {
+                            UI.showStatus('Failed to add network. Please add it manually.', 'error');
+                            throw addError;
+                        }
                     } else {
                         throw switchError;
                     }
@@ -206,3 +214,4 @@ const FeatureRegistry = {
         }
     }
 };
+
