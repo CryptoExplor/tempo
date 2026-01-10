@@ -122,10 +122,14 @@ FeatureRegistry.register({
                     const decimals = await contract.decimals();
                     const formatted = ethers.utils.formatUnits(balance, decimals);
 
+                    // Get token icon from Tempo tokenlist
+                    const iconUrl = `https://tokenlist.tempo.xyz/icon/${CONFIG.CHAIN_ID}/${address}`;
+
                     holdings.push({
                         symbol,
                         balance: parseFloat(formatted),
-                        address
+                        address,
+                        iconUrl
                     });
                 } catch (err) {
                     console.error(`Error loading ${symbol}:`, err);
@@ -148,9 +152,18 @@ FeatureRegistry.register({
 
             holdingsDiv.innerHTML = holdings.map(h => `
                 <div class="bg-gray-50 rounded-lg p-4 flex justify-between items-center hover:bg-gray-100 transition-colors border border-gray-200">
-                    <div class="flex-1">
-                        <div class="font-semibold text-gray-800 text-lg">${h.symbol}</div>
-                        <div class="text-xs text-gray-500 font-mono break-all">${h.address.slice(0, 10)}...${h.address.slice(-8)}</div>
+                    <div class="flex items-center gap-3 flex-1">
+                        <img src="${h.iconUrl}" 
+                             alt="${h.symbol}" 
+                             class="w-10 h-10 rounded-full"
+                             onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white font-bold text-sm" style="display:none;">
+                            ${h.symbol.slice(0, 2)}
+                        </div>
+                        <div class="flex-1">
+                            <div class="font-semibold text-gray-800 text-lg">${h.symbol}</div>
+                            <div class="text-xs text-gray-500 font-mono break-all">${h.address.slice(0, 10)}...${h.address.slice(-8)}</div>
+                        </div>
                     </div>
                     <div class="text-right ml-4">
                         <div class="font-bold text-gray-800 text-xl">${h.balance.toFixed(2)}</div>
@@ -178,140 +191,188 @@ FeatureRegistry.register({
             return;
         }
 
-        activityDiv.innerHTML = '<div class="text-sm text-gray-500 text-center py-4">Scanning recent blocks...</div>';
+        activityDiv.innerHTML = '<div class="text-sm text-gray-500 text-center py-4">Loading transaction history from Explorer API...</div>';
 
         try {
-            const currentBlock = await TempoApp.provider.getBlockNumber();
-            // Scan only recent blocks - testnets don't keep full history
-            const fromBlock = Math.max(currentBlock - 50000, 0);
+            // Method 1: Try Explorer API first (most reliable)
+            let activities = [];
+            let apiSuccess = false;
             
-            console.log(`Scanning from block ${fromBlock} to ${currentBlock} (${currentBlock - fromBlock} blocks)`);
-            
-            const activities = [];
-
-            // Method 1: Get native transaction history (catches all txs including mints)
             try {
-                console.log('Fetching transaction history from provider...');
-                const history = await TempoApp.provider.getHistory(
-                    TempoApp.account,
-                    fromBlock,
-                    currentBlock
-                );
+                console.log('Fetching from Tempo Explorer API...');
+                const apiUrl = `https://explore.tempo.xyz/api/address/txs-count/${TempoApp.account}`;
+                const response = await fetch(apiUrl);
                 
-                console.log(`Found ${history.length} transactions in history`);
-                
-                for (const tx of history) {
-                    // Skip if no value transferred
-                    if (tx.value && tx.value.gt(0)) {
-                        activities.push({
-                            type: tx.from.toLowerCase() === TempoApp.account.toLowerCase() ? 'Sent' : 'Received',
-                            token: 'Native TX',
-                            amount: parseFloat(ethers.utils.formatEther(tx.value)),
-                            blockNumber: tx.blockNumber,
-                            txHash: tx.hash,
-                            icon: tx.from.toLowerCase() === TempoApp.account.toLowerCase() ? '⚡' : '⬇️',
-                            color: tx.from.toLowerCase() === TempoApp.account.toLowerCase() ? 'blue' : 'purple',
-                            to: tx.to,
-                            from: tx.from,
-                            timestamp: null
-                        });
+                if (response.ok) {
+                    const data = await response.json();
+                    console.log('Explorer API response:', data);
+                    
+                    // Update transaction count from API
+                    if (data.txCount !== undefined) {
+                        const txCountElement = document.getElementById('totalTxCount');
+                        if (txCountElement) {
+                            txCountElement.textContent = data.txCount.toString();
+                        }
+                    }
+                    
+                    // Try to get transaction list
+                    try {
+                        const txListUrl = `https://explore.tempo.xyz/api/address/txs/${TempoApp.account}?limit=20`;
+                        const txListResponse = await fetch(txListUrl);
+                        
+                        if (txListResponse.ok) {
+                            const txData = await txListResponse.json();
+                            console.log('Got transaction list:', txData);
+                            
+                            if (txData.transactions && Array.isArray(txData.transactions)) {
+                                for (const tx of txData.transactions) {
+                                    activities.push({
+                                        type: tx.from?.toLowerCase() === TempoApp.account.toLowerCase() ? 'Sent' : 'Received',
+                                        token: tx.token || 'Transaction',
+                                        amount: tx.value ? parseFloat(tx.value) : 0,
+                                        blockNumber: tx.blockNumber || 0,
+                                        txHash: tx.hash,
+                                        icon: tx.from?.toLowerCase() === TempoApp.account.toLowerCase() ? '📤' : '📥',
+                                        color: tx.from?.toLowerCase() === TempoApp.account.toLowerCase() ? 'red' : 'green',
+                                        to: tx.to,
+                                        from: tx.from,
+                                        timestamp: tx.timestamp
+                                    });
+                                }
+                                apiSuccess = true;
+                            }
+                        }
+                    } catch (txListErr) {
+                        console.warn('Could not fetch transaction list:', txListErr);
                     }
                 }
-            } catch (historyErr) {
-                console.error('Error fetching transaction history:', historyErr);
-                // Continue with event logs anyway
+            } catch (apiErr) {
+                console.warn('Explorer API not available:', apiErr);
             }
 
-            // Method 2: Scan token Transfer events
-            for (const [symbol, address] of Object.entries(CONFIG.TOKENS)) {
-                console.log(`Scanning ${symbol} events...`);
+            // Method 2: Fallback to RPC if API fails
+            if (!apiSuccess) {
+                console.log('Falling back to RPC scanning...');
+                const currentBlock = await TempoApp.provider.getBlockNumber();
+                const fromBlock = Math.max(currentBlock - 10000, 0);
                 
+                console.log(`Scanning from block ${fromBlock} to ${currentBlock}`);
+
+                // Get native transaction history
                 try {
-                    const contract = new ethers.Contract(address, ERC20_ABI, TempoApp.provider);
-                    const decimals = await contract.decimals();
+                    const history = await TempoApp.provider.getHistory(
+                        TempoApp.account,
+                        fromBlock,
+                        currentBlock
+                    );
                     
-                    // Get sent transfers
-                    try {
-                        const sentFilter = contract.filters.Transfer(TempoApp.account, null);
-                        const sentEvents = await contract.queryFilter(sentFilter, fromBlock, currentBlock);
-                        console.log(`Found ${sentEvents.length} sent events for ${symbol}`);
-                        
-                        for (const event of sentEvents) {
-                            const amount = ethers.utils.formatUnits(event.args.value, decimals);
+                    console.log(`Found ${history.length} transactions in history`);
+                    
+                    for (const tx of history) {
+                        if (tx.value && tx.value.gt(0)) {
                             activities.push({
-                                type: 'Sent',
-                                token: symbol,
-                                amount: parseFloat(amount),
-                                blockNumber: event.blockNumber,
-                                txHash: event.transactionHash,
-                                icon: '📤',
-                                color: 'red',
-                                to: event.args.to,
+                                type: tx.from.toLowerCase() === TempoApp.account.toLowerCase() ? 'Sent' : 'Received',
+                                token: 'Native TX',
+                                amount: parseFloat(ethers.utils.formatEther(tx.value)),
+                                blockNumber: tx.blockNumber,
+                                txHash: tx.hash,
+                                icon: tx.from.toLowerCase() === TempoApp.account.toLowerCase() ? '⚡' : '⬇️',
+                                color: tx.from.toLowerCase() === TempoApp.account.toLowerCase() ? 'blue' : 'purple',
+                                to: tx.to,
+                                from: tx.from,
                                 timestamp: null
                             });
                         }
-                    } catch (sentErr) {
-                        console.warn(`Could not fetch sent events for ${symbol}:`, sentErr.message);
                     }
-                    
-                    // Get received transfers
+                } catch (historyErr) {
+                    console.warn('Error fetching transaction history:', historyErr);
+                }
+
+                // Scan token Transfer events
+                for (const [symbol, address] of Object.entries(CONFIG.TOKENS)) {
                     try {
-                        const receivedFilter = contract.filters.Transfer(null, TempoApp.account);
-                        const receivedEvents = await contract.queryFilter(receivedFilter, fromBlock, currentBlock);
-                        console.log(`Found ${receivedEvents.length} received events for ${symbol}`);
+                        const contract = new ethers.Contract(address, ERC20_ABI, TempoApp.provider);
+                        const decimals = await contract.decimals();
                         
-                        for (const event of receivedEvents) {
-                            const amount = ethers.utils.formatUnits(event.args.value, decimals);
-                            activities.push({
-                                type: 'Received',
-                                token: symbol,
-                                amount: parseFloat(amount),
-                                blockNumber: event.blockNumber,
-                                txHash: event.transactionHash,
-                                icon: '📥',
-                                color: 'green',
-                                from: event.args.from,
-                                timestamp: null
-                            });
+                        // Sent transfers
+                        try {
+                            const sentFilter = contract.filters.Transfer(TempoApp.account, null);
+                            const sentEvents = await contract.queryFilter(sentFilter, fromBlock, currentBlock);
+                            
+                            for (const event of sentEvents) {
+                                const amount = ethers.utils.formatUnits(event.args.value, decimals);
+                                activities.push({
+                                    type: 'Sent',
+                                    token: symbol,
+                                    amount: parseFloat(amount),
+                                    blockNumber: event.blockNumber,
+                                    txHash: event.transactionHash,
+                                    icon: '📤',
+                                    color: 'red',
+                                    to: event.args.to,
+                                    timestamp: null
+                                });
+                            }
+                        } catch (sentErr) {
+                            console.warn(`Could not fetch sent events for ${symbol}`);
                         }
-                    } catch (recErr) {
-                        console.warn(`Could not fetch received events for ${symbol}:`, recErr.message);
+                        
+                        // Received transfers
+                        try {
+                            const receivedFilter = contract.filters.Transfer(null, TempoApp.account);
+                            const receivedEvents = await contract.queryFilter(receivedFilter, fromBlock, currentBlock);
+                            
+                            for (const event of receivedEvents) {
+                                const amount = ethers.utils.formatUnits(event.args.value, decimals);
+                                activities.push({
+                                    type: 'Received',
+                                    token: symbol,
+                                    amount: parseFloat(amount),
+                                    blockNumber: event.blockNumber,
+                                    txHash: event.transactionHash,
+                                    icon: '📥',
+                                    color: 'green',
+                                    from: event.args.from,
+                                    timestamp: null
+                                });
+                            }
+                        } catch (recErr) {
+                            console.warn(`Could not fetch received events for ${symbol}`);
+                        }
+                    } catch (err) {
+                        console.warn(`Error scanning ${symbol}:`, err.message);
                     }
-                } catch (err) {
-                    console.warn(`Error scanning ${symbol}:`, err.message);
                 }
             }
             
             console.log(`Total activities found: ${activities.length}`);
 
             if (activities.length === 0) {
-                console.log('No activities found - showing explorer hint');
+                console.log('No activities found');
                 activityDiv.innerHTML = `
                     <div class="text-center py-8 bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg border-2 border-gray-200">
                         <div class="text-5xl mb-3">📊</div>
                         <div class="text-gray-700 font-medium mb-2">No Recent Activity Found</div>
-                        <div class="text-sm text-gray-600 mb-1">Scanned last ${(currentBlock - fromBlock).toLocaleString()} blocks</div>
-                        <div class="text-xs text-gray-500 mb-4">Block range: ${fromBlock.toLocaleString()} - ${currentBlock.toLocaleString()}</div>
                         
-                        <!-- Testnet Limitation Notice -->
-                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mx-auto max-w-md mb-4">
-                            <div class="text-sm text-yellow-800 mb-2">
-                                <strong>⚠️ Testnet RPC Limitations</strong>
+                        <!-- Helpful Info -->
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mx-auto max-w-md mb-4">
+                            <div class="text-sm text-blue-800 mb-2">
+                                <strong>💡 Why might this happen?</strong>
                             </div>
-                            <div class="text-xs text-yellow-700 text-left space-y-1">
-                                <div>• RPC nodes may not expose full historical logs</div>
-                                <div>• Faucet mints may not emit standard Transfer events</div>
-                                <div>• Transaction count (${document.getElementById('totalTxCount')?.textContent || '?'}) only counts sent transactions</div>
-                                <div>• Explorer indexing is more complete than RPC</div>
+                            <div class="text-xs text-blue-700 text-left space-y-1">
+                                <div>• You haven't made any transactions yet</div>
+                                <div>• Faucet claims may not show as Transfer events</div>
+                                <div>• Recent transactions may take time to index</div>
+                                <div>• Your balance came from a direct mint</div>
                             </div>
                         </div>
                         
-                        <div class="text-sm text-gray-500 mb-4">Your balances show correctly because state ≠ logs</div>
+                        <div class="text-sm text-gray-500 mb-4">Your balances show correctly above</div>
                         
                         <div class="flex justify-center gap-2 flex-wrap">
                             <button onclick="window.open('${CONFIG.EXPLORER_URL}/address/${TempoApp.account}', '_blank')" 
                                     class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold">
-                                📊 View Full History on Explorer
+                                📊 View on Explorer
                             </button>
                             <button onclick="FeatureRegistry.showFeature('faucet')" 
                                     class="text-xs bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold">
@@ -340,14 +401,16 @@ FeatureRegistry.register({
                 }
             }
 
-            // Get timestamps for recent activities
+            // Get timestamps for activities that don't have them
             const recentActivities = uniqueActivities.slice(0, 15);
             for (const activity of recentActivities) {
-                try {
-                    const block = await TempoApp.provider.getBlock(activity.blockNumber);
-                    activity.timestamp = block.timestamp;
-                } catch (err) {
-                    console.error('Error getting block timestamp:', err);
+                if (!activity.timestamp) {
+                    try {
+                        const block = await TempoApp.provider.getBlock(activity.blockNumber);
+                        activity.timestamp = block.timestamp;
+                    } catch (err) {
+                        console.error('Error getting block timestamp:', err);
+                    }
                 }
             }
 
@@ -355,10 +418,10 @@ FeatureRegistry.register({
                 <div class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <div class="flex items-center justify-between">
                         <div class="text-sm text-blue-800">
-                            <strong>📊 Showing ${recentActivities.length} recent transactions</strong>
+                            <strong>📊 ${apiSuccess ? 'Loaded from Explorer API' : 'Loaded from RPC'}</strong>
                         </div>
                         <div class="text-xs text-blue-600">
-                            Scanned: ${(currentBlock - fromBlock).toLocaleString()} blocks
+                            Showing ${recentActivities.length} recent transactions
                         </div>
                     </div>
                     ${uniqueActivities.length > recentActivities.length ? `
@@ -415,13 +478,10 @@ FeatureRegistry.register({
                     <div class="text-4xl mb-2">⚠️</div>
                     <div class="text-yellow-800 font-medium mb-2">Unable to load recent activity</div>
                     <div class="text-sm text-yellow-600 mb-4">${error.message}</div>
-                    <div class="text-xs text-yellow-700 mb-4">
-                        This is common on testnets with limited RPC infrastructure.
-                    </div>
                     <div class="flex justify-center gap-2">
                         <button onclick="window.open('${CONFIG.EXPLORER_URL}/address/${TempoApp.account}', '_blank')" 
                                 class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold">
-                            📊 View on Explorer Instead
+                            📊 View on Explorer
                         </button>
                         <button onclick="FeatureRegistry.features.find(f => f.id === 'statistics').loadRecentActivity()" 
                                 class="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">
