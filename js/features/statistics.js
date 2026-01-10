@@ -79,8 +79,12 @@ FeatureRegistry.register({
         try {
             const provider = TempoApp.provider;
             
+            console.log('Loading stats for address:', TempoApp.account);
+            
             // Get transaction count
             const txCount = await provider.getTransactionCount(TempoApp.account);
+            console.log('Transaction count:', txCount);
+            
             const txCountElement = document.getElementById('totalTxCount');
             if (txCountElement) {
                 txCountElement.textContent = txCount.toString();
@@ -178,66 +182,84 @@ FeatureRegistry.register({
 
         try {
             const currentBlock = await TempoApp.provider.getBlockNumber();
-            const fromBlock = Math.max(0, currentBlock - 2000); // Scan more blocks
+            const fromBlock = 0; // Scan from genesis to get all transactions
+            
+            console.log(`Scanning from block ${fromBlock} to ${currentBlock} for address ${TempoApp.account}`);
             
             const activities = [];
 
             // Scan all token transfers
             for (const [symbol, address] of Object.entries(CONFIG.TOKENS)) {
+                console.log(`Scanning ${symbol} at ${address}...`);
+                
                 try {
                     const contract = new ethers.Contract(address, ERC20_ABI, TempoApp.provider);
+                    const decimals = await contract.decimals();
                     
                     // Get sent transfers
-                    const sentFilter = contract.filters.Transfer(TempoApp.account, null);
-                    const sentEvents = await contract.queryFilter(sentFilter, fromBlock, currentBlock);
+                    try {
+                        const sentFilter = contract.filters.Transfer(TempoApp.account, null);
+                        const sentEvents = await contract.queryFilter(sentFilter, fromBlock, currentBlock);
+                        console.log(`Found ${sentEvents.length} sent events for ${symbol}`);
+                        
+                        // Process sent transfers
+                        for (const event of sentEvents) {
+                            const amount = ethers.utils.formatUnits(event.args.value, decimals);
+                            activities.push({
+                                type: 'Sent',
+                                token: symbol,
+                                amount: parseFloat(amount),
+                                blockNumber: event.blockNumber,
+                                txHash: event.transactionHash,
+                                icon: '📤',
+                                color: 'red',
+                                to: event.args.to,
+                                timestamp: null
+                            });
+                        }
+                    } catch (sentErr) {
+                        console.error(`Error getting sent transfers for ${symbol}:`, sentErr);
+                    }
                     
                     // Get received transfers
-                    const receivedFilter = contract.filters.Transfer(null, TempoApp.account);
-                    const receivedEvents = await contract.queryFilter(receivedFilter, fromBlock, currentBlock);
-
-                    const decimals = await contract.decimals();
-
-                    // Process sent transfers
-                    for (const event of sentEvents) {
-                        const amount = ethers.utils.formatUnits(event.args.value, decimals);
-                        activities.push({
-                            type: 'Sent',
-                            token: symbol,
-                            amount: parseFloat(amount),
-                            blockNumber: event.blockNumber,
-                            txHash: event.transactionHash,
-                            icon: '📤',
-                            color: 'red',
-                            to: event.args.to,
-                            timestamp: null
-                        });
-                    }
-
-                    // Process received transfers
-                    for (const event of receivedEvents) {
-                        const amount = ethers.utils.formatUnits(event.args.value, decimals);
-                        activities.push({
-                            type: 'Received',
-                            token: symbol,
-                            amount: parseFloat(amount),
-                            blockNumber: event.blockNumber,
-                            txHash: event.transactionHash,
-                            icon: '📥',
-                            color: 'green',
-                            from: event.args.from,
-                            timestamp: null
-                        });
+                    try {
+                        const receivedFilter = contract.filters.Transfer(null, TempoApp.account);
+                        const receivedEvents = await contract.queryFilter(receivedFilter, fromBlock, currentBlock);
+                        console.log(`Found ${receivedEvents.length} received events for ${symbol}`);
+                        
+                        // Process received transfers
+                        for (const event of receivedEvents) {
+                            const amount = ethers.utils.formatUnits(event.args.value, decimals);
+                            activities.push({
+                                type: 'Received',
+                                token: symbol,
+                                amount: parseFloat(amount),
+                                blockNumber: event.blockNumber,
+                                txHash: event.transactionHash,
+                                icon: '📥',
+                                color: 'green',
+                                from: event.args.from,
+                                timestamp: null
+                            });
+                        }
+                    } catch (recErr) {
+                        console.error(`Error getting received transfers for ${symbol}:`, recErr);
                     }
                 } catch (err) {
                     console.error(`Error scanning ${symbol}:`, err);
                 }
             }
+            
+            console.log(`Total activities found: ${activities.length}`);
 
             if (activities.length === 0) {
+                console.log('No activities found - showing empty state');
                 activityDiv.innerHTML = `
                     <div class="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
                         <div class="text-5xl mb-3">📊</div>
                         <div class="text-gray-700 font-medium mb-2">No Recent Activity</div>
+                        <div class="text-sm text-gray-500 mb-2">Scanned ${currentBlock} blocks</div>
+                        <div class="text-xs text-gray-400 mb-4">Address: ${TempoApp.account}</div>
                         <div class="text-sm text-gray-500">Start using the testnet to see your transactions here</div>
                         <div class="mt-4 flex justify-center gap-2">
                             <button onclick="FeatureRegistry.showFeature('faucet')" 
@@ -247,6 +269,10 @@ FeatureRegistry.register({
                             <button onclick="FeatureRegistry.showFeature('swap')" 
                                     class="text-xs bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold">
                                 Make a Swap
+                            </button>
+                            <button onclick="FeatureRegistry.features.find(f => f.id === 'statistics').loadRecentActivity()" 
+                                    class="text-xs bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold">
+                                🔄 Retry Scan
                             </button>
                         </div>
                     </div>
