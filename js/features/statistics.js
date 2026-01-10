@@ -178,19 +178,53 @@ FeatureRegistry.register({
             return;
         }
 
-        activityDiv.innerHTML = '<div class="text-sm text-gray-500 text-center py-4">Scanning blockchain for your transactions...</div>';
+        activityDiv.innerHTML = '<div class="text-sm text-gray-500 text-center py-4">Scanning recent blocks...</div>';
 
         try {
             const currentBlock = await TempoApp.provider.getBlockNumber();
-            const fromBlock = 0; // Scan from genesis to get all transactions
+            // Scan only recent blocks - testnets don't keep full history
+            const fromBlock = Math.max(currentBlock - 50000, 0);
             
-            console.log(`Scanning from block ${fromBlock} to ${currentBlock} for address ${TempoApp.account}`);
+            console.log(`Scanning from block ${fromBlock} to ${currentBlock} (${currentBlock - fromBlock} blocks)`);
             
             const activities = [];
 
-            // Scan all token transfers
+            // Method 1: Get native transaction history (catches all txs including mints)
+            try {
+                console.log('Fetching transaction history from provider...');
+                const history = await TempoApp.provider.getHistory(
+                    TempoApp.account,
+                    fromBlock,
+                    currentBlock
+                );
+                
+                console.log(`Found ${history.length} transactions in history`);
+                
+                for (const tx of history) {
+                    // Skip if no value transferred
+                    if (tx.value && tx.value.gt(0)) {
+                        activities.push({
+                            type: tx.from.toLowerCase() === TempoApp.account.toLowerCase() ? 'Sent' : 'Received',
+                            token: 'Native TX',
+                            amount: parseFloat(ethers.utils.formatEther(tx.value)),
+                            blockNumber: tx.blockNumber,
+                            txHash: tx.hash,
+                            icon: tx.from.toLowerCase() === TempoApp.account.toLowerCase() ? '⚡' : '⬇️',
+                            color: tx.from.toLowerCase() === TempoApp.account.toLowerCase() ? 'blue' : 'purple',
+                            to: tx.to,
+                            from: tx.from,
+                            timestamp: null
+                        });
+                    }
+                }
+            } catch (historyErr) {
+                console.error('Error fetching transaction history:', historyErr);
+                // Continue with event logs anyway
+            }
+
+            // Method 2: Scan token Transfer events
             for (const [symbol, address] of Object.entries(CONFIG.TOKENS)) {
-                console.log(`Scanning ${symbol} at ${address}...`);
+                console.log(`Scanning ${symbol} events...`);
                 
                 try {
                     const contract = new ethers.Contract(address, ERC20_ABI, TempoApp.provider);
@@ -202,7 +236,6 @@ FeatureRegistry.register({
                         const sentEvents = await contract.queryFilter(sentFilter, fromBlock, currentBlock);
                         console.log(`Found ${sentEvents.length} sent events for ${symbol}`);
                         
-                        // Process sent transfers
                         for (const event of sentEvents) {
                             const amount = ethers.utils.formatUnits(event.args.value, decimals);
                             activities.push({
@@ -218,7 +251,7 @@ FeatureRegistry.register({
                             });
                         }
                     } catch (sentErr) {
-                        console.error(`Error getting sent transfers for ${symbol}:`, sentErr);
+                        console.warn(`Could not fetch sent events for ${symbol}:`, sentErr.message);
                     }
                     
                     // Get received transfers
@@ -227,7 +260,6 @@ FeatureRegistry.register({
                         const receivedEvents = await contract.queryFilter(receivedFilter, fromBlock, currentBlock);
                         console.log(`Found ${receivedEvents.length} received events for ${symbol}`);
                         
-                        // Process received transfers
                         for (const event of receivedEvents) {
                             const amount = ethers.utils.formatUnits(event.args.value, decimals);
                             activities.push({
@@ -243,36 +275,51 @@ FeatureRegistry.register({
                             });
                         }
                     } catch (recErr) {
-                        console.error(`Error getting received transfers for ${symbol}:`, recErr);
+                        console.warn(`Could not fetch received events for ${symbol}:`, recErr.message);
                     }
                 } catch (err) {
-                    console.error(`Error scanning ${symbol}:`, err);
+                    console.warn(`Error scanning ${symbol}:`, err.message);
                 }
             }
             
             console.log(`Total activities found: ${activities.length}`);
 
             if (activities.length === 0) {
-                console.log('No activities found - showing empty state');
+                console.log('No activities found - showing explorer hint');
                 activityDiv.innerHTML = `
-                    <div class="text-center py-8 bg-gray-50 rounded-lg border border-gray-200">
+                    <div class="text-center py-8 bg-gradient-to-br from-gray-50 to-blue-50 rounded-lg border-2 border-gray-200">
                         <div class="text-5xl mb-3">📊</div>
-                        <div class="text-gray-700 font-medium mb-2">No Recent Activity</div>
-                        <div class="text-sm text-gray-500 mb-2">Scanned ${currentBlock} blocks</div>
-                        <div class="text-xs text-gray-400 mb-4">Address: ${TempoApp.account}</div>
-                        <div class="text-sm text-gray-500">Start using the testnet to see your transactions here</div>
-                        <div class="mt-4 flex justify-center gap-2">
-                            <button onclick="FeatureRegistry.showFeature('faucet')" 
+                        <div class="text-gray-700 font-medium mb-2">No Recent Activity Found</div>
+                        <div class="text-sm text-gray-600 mb-1">Scanned last ${(currentBlock - fromBlock).toLocaleString()} blocks</div>
+                        <div class="text-xs text-gray-500 mb-4">Block range: ${fromBlock.toLocaleString()} - ${currentBlock.toLocaleString()}</div>
+                        
+                        <!-- Testnet Limitation Notice -->
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mx-auto max-w-md mb-4">
+                            <div class="text-sm text-yellow-800 mb-2">
+                                <strong>⚠️ Testnet RPC Limitations</strong>
+                            </div>
+                            <div class="text-xs text-yellow-700 text-left space-y-1">
+                                <div>• RPC nodes may not expose full historical logs</div>
+                                <div>• Faucet mints may not emit standard Transfer events</div>
+                                <div>• Transaction count (${document.getElementById('totalTxCount')?.textContent || '?'}) only counts sent transactions</div>
+                                <div>• Explorer indexing is more complete than RPC</div>
+                            </div>
+                        </div>
+                        
+                        <div class="text-sm text-gray-500 mb-4">Your balances show correctly because state ≠ logs</div>
+                        
+                        <div class="flex justify-center gap-2 flex-wrap">
+                            <button onclick="window.open('${CONFIG.EXPLORER_URL}/address/${TempoApp.account}', '_blank')" 
                                     class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold">
-                                Get Faucet
+                                📊 View Full History on Explorer
+                            </button>
+                            <button onclick="FeatureRegistry.showFeature('faucet')" 
+                                    class="text-xs bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold">
+                                💧 Get Faucet
                             </button>
                             <button onclick="FeatureRegistry.showFeature('swap')" 
                                     class="text-xs bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg font-semibold">
-                                Make a Swap
-                            </button>
-                            <button onclick="FeatureRegistry.features.find(f => f.id === 'statistics').loadRecentActivity()" 
-                                    class="text-xs bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-semibold">
-                                🔄 Retry Scan
+                                🔄 Make a Swap
                             </button>
                         </div>
                     </div>
@@ -283,8 +330,18 @@ FeatureRegistry.register({
             // Sort by block number (most recent first)
             activities.sort((a, b) => b.blockNumber - a.blockNumber);
 
+            // Remove duplicates (same tx hash)
+            const uniqueActivities = [];
+            const seenTxs = new Set();
+            for (const activity of activities) {
+                if (!seenTxs.has(activity.txHash)) {
+                    seenTxs.add(activity.txHash);
+                    uniqueActivities.push(activity);
+                }
+            }
+
             // Get timestamps for recent activities
-            const recentActivities = activities.slice(0, 15);
+            const recentActivities = uniqueActivities.slice(0, 15);
             for (const activity of recentActivities) {
                 try {
                     const block = await TempoApp.provider.getBlock(activity.blockNumber);
@@ -295,9 +352,25 @@ FeatureRegistry.register({
             }
 
             activityDiv.innerHTML = `
-                <div class="mb-3 flex items-center justify-between">
-                    <div class="text-sm text-gray-600">Showing ${recentActivities.length} most recent transactions</div>
-                    <div class="text-xs text-gray-500">Total: ${activities.length} transactions found</div>
+                <div class="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex items-center justify-between">
+                        <div class="text-sm text-blue-800">
+                            <strong>📊 Showing ${recentActivities.length} recent transactions</strong>
+                        </div>
+                        <div class="text-xs text-blue-600">
+                            Scanned: ${(currentBlock - fromBlock).toLocaleString()} blocks
+                        </div>
+                    </div>
+                    ${uniqueActivities.length > recentActivities.length ? `
+                        <div class="text-xs text-blue-600 mt-1">
+                            Found ${uniqueActivities.length} total • 
+                            <a href="${CONFIG.EXPLORER_URL}/address/${TempoApp.account}" 
+                               target="_blank" 
+                               class="underline hover:text-blue-800">
+                                View all on Explorer
+                            </a>
+                        </div>
+                    ` : ''}
                 </div>
                 ${recentActivities.map(act => {
                     const timeAgo = act.timestamp 
@@ -342,10 +415,19 @@ FeatureRegistry.register({
                     <div class="text-4xl mb-2">⚠️</div>
                     <div class="text-yellow-800 font-medium mb-2">Unable to load recent activity</div>
                     <div class="text-sm text-yellow-600 mb-4">${error.message}</div>
-                    <button onclick="FeatureRegistry.features.find(f => f.id === 'statistics').loadRecentActivity()" 
-                            class="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">
-                        Try Again
-                    </button>
+                    <div class="text-xs text-yellow-700 mb-4">
+                        This is common on testnets with limited RPC infrastructure.
+                    </div>
+                    <div class="flex justify-center gap-2">
+                        <button onclick="window.open('${CONFIG.EXPLORER_URL}/address/${TempoApp.account}', '_blank')" 
+                                class="text-xs bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold">
+                            📊 View on Explorer Instead
+                        </button>
+                        <button onclick="FeatureRegistry.features.find(f => f.id === 'statistics').loadRecentActivity()" 
+                                class="text-xs bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg font-semibold">
+                            🔄 Retry
+                        </button>
+                    </div>
                 </div>
             `;
         }
